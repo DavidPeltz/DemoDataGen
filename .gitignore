@@ -12,6 +12,9 @@ build/
 # Generated data files
 output/
 
+# User configuration (optional - program will use defaults if not present)
+config.json
+
 # Environment variables
 .env
 .env.local
