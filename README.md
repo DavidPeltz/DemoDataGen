@@ -8,6 +8,7 @@ A TypeScript program for generating realistic demo data for testing and developm
 - **Product Generation**: Create fake products with names, descriptions, prices, categories, and tags
 - **Mixed Data Generation**: Generate various types of data including users, products, orders, and reviews
 - **Interactive Country Selection**: Choose the country for data generation with support for country names and codes
+- **Interactive User Count**: Specify the number of users to generate (with smart defaults)
 - **Country-Specific Names**: Uses top 50 first names and surnames for selected countries (US, Canada, UK, Germany, France)
 - **Country-Appropriate Addresses**: Generates realistic cities and states/regions for each country
 - **Gender Distribution**: Automatically generates 53% female and 47% male users
@@ -34,15 +35,33 @@ npm install
 ## Usage
 
 ### Interactive Mode
-The program will prompt you to enter a country for data generation:
+The program will prompt you for two inputs:
+
+1. **Country Selection**: Enter a country for data generation
+2. **User Count**: Specify how many users to generate
 
 ```bash
 npm run dev
 ```
 
+#### Country Input
 You can enter either:
 - **Country name**: "United States", "Canada", "Germany", etc.
 - **Country code**: "US", "CA", "DE", etc.
+
+#### User Count Input
+- **Valid number**: Any positive integer (e.g., "50", "100", "1000")
+- **Invalid input**: Program defaults to 20 users
+- **Empty input**: Program defaults to 20 users
+
+Example interaction:
+```
+🌍 Enter country (name or 2-character code): US
+📍 Generating data for country: US
+
+👥 Enter number of users to generate (default: 20): 50
+👥 Generating 50 users...
+```
 
 ### Development Mode
 Run the program in development mode with hot reloading:
