@@ -92,6 +92,25 @@ async function getCountryInput(rl: readline.Interface): Promise<string> {
 }
 
 /**
+ * Prompts the user for the number of users to generate
+ * 
+ * This function handles the user count input with validation and a default value.
+ * If the user enters an invalid number or leaves it empty, it defaults to 20 users.
+ * 
+ * @param rl - Readline interface for user input
+ * @returns Promise<number> - The number of users to generate (minimum 1)
+ */
+async function getUserCountInput(rl: readline.Interface): Promise<number> {
+  return new Promise((resolve) => {
+    rl.question('👥 Enter number of users to generate (default: 20): ', (answer) => {
+      const count = parseInt(answer.trim());
+      // Use default of 20 if input is invalid, empty, or less than 1
+      resolve(isNaN(count) || count <= 0 ? 20 : count);
+    });
+  });
+}
+
+/**
  * Converts base User objects into UserProfile objects with tracking information
  * 
  * This function adds profile type classification and generates linking identifiers
@@ -240,11 +259,12 @@ function saveDataToFiles(userProfiles: UserProfile[], events: UserEvent[], count
  * 
  * This function orchestrates the entire data generation process:
  * 1. Gets country input from user
- * 2. Initializes data generators
- * 3. Generates users, products, and mixed data
- * 4. Creates user profiles with tracking information
- * 5. Generates user events with proper linking
- * 6. Saves all data to files
+ * 2. Gets user count input from user
+ * 3. Initializes data generators
+ * 4. Generates users, products, and mixed data
+ * 5. Creates user profiles with tracking information
+ * 6. Generates user events with proper linking
+ * 7. Saves all data to files
  * 
  * @returns Promise<void>
  */
@@ -259,16 +279,20 @@ async function main(): Promise<void> {
     const countryInput = await getCountryInput(rl);
     console.log(`📍 Generating data for country: ${countryInput}\n`);
 
-    // Step 2: Initialize data generators
+    // Step 2: Get user count input from user
+    const userCount = await getUserCountInput(rl);
+    console.log(`👥 Generating ${userCount} users...\n`);
+
+    // Step 3: Initialize data generators
     const userGenerator = new UserGenerator();
     const productGenerator = new ProductGenerator();
     const dataGenerator = new DataGenerator();
 
-    // Step 3: Generate sample data
+    // Step 4: Generate sample data
     console.log('📊 Generating sample data...\n');
 
-    // Generate 20 users for the specified country with country-specific data
-    const users = userGenerator.generateUsersForCountry(20, countryInput);
+    // Generate users for the specified country with country-specific data
+    const users = userGenerator.generateUsersForCountry(userCount, countryInput);
     
     // Convert users to profiles with tracking information
     const userProfiles = generateUserProfiles(users);
