@@ -90,6 +90,10 @@ function mergeConfig(defaults: Config, userConfig: Partial<Config>): Config {
     logging: {
       ...defaults.logging,
       ...userConfig.logging
+    },
+    graphql: {
+      ...defaults.graphql,
+      ...userConfig.graphql
     }
   };
 }

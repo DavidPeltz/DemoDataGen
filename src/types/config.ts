@@ -96,6 +96,26 @@ export interface LoggingConfig {
 }
 
 /**
+ * GraphQL Schema Configuration
+ * 
+ * Configuration for GraphQL schema-based data generation.
+ */
+export interface GraphQLConfig {
+  /** Whether to use GraphQL schema for data generation */
+  enabled: boolean;
+  /** Path to the GraphQL schema file */
+  schemaPath?: string;
+  /** Whether to generate data for all types in the schema */
+  generateAllTypes: boolean;
+  /** Number of records to generate per type */
+  recordsPerType: number;
+  /** Specific types to generate data for */
+  targetTypes?: string[];
+  /** Whether to include field mapping information in output */
+  includeFieldMappings: boolean;
+}
+
+/**
  * Main Configuration Interface
  * 
  * Combines all configuration sections into a single interface.
@@ -106,6 +126,7 @@ export interface Config {
   eventGeneration: EventGenerationConfig;
   userProfiles: UserProfileConfig;
   logging: LoggingConfig;
+  graphql: GraphQLConfig;
 }
 
 /**
@@ -151,5 +172,11 @@ export const DEFAULT_CONFIG: Config = {
     level: 'info',
     showProgress: true,
     showSummary: true
+  },
+  graphql: {
+    enabled: false,
+    generateAllTypes: true,
+    recordsPerType: 5,
+    includeFieldMappings: false
   }
 }; 

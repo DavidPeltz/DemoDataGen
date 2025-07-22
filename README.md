@@ -21,6 +21,7 @@ A TypeScript program for generating realistic demo data for testing and developm
 - **Flexible Output Options**: Configurable output directory, timestamps, and compression
 - **TypeScript**: Fully typed with modern TypeScript features
 - **Faker.js Integration**: Uses the popular Faker.js library for realistic data generation
+- **GraphQL Schema Support**: Automatically generates data based on GraphQL schema definitions
 
 ## Installation
 
@@ -150,14 +151,116 @@ npm test
 
 ```
 src/
-├── index.ts              # Main entry point
+├── index.ts                    # Main entry point
 ├── types/
-│   └── index.ts          # TypeScript type definitions
-└── generators/
-    ├── UserGenerator.ts   # User data generation
-    ├── ProductGenerator.ts # Product data generation
-    └── DataGenerator.ts   # Mixed data generation
+│   ├── index.ts               # TypeScript type definitions
+│   ├── config.ts              # Configuration type definitions
+│   └── graphql.ts             # GraphQL schema type definitions
+├── generators/
+│   ├── UserGenerator.ts       # User data generation
+│   ├── ProductGenerator.ts    # Product data generation
+│   ├── DataGenerator.ts       # Mixed data generation
+│   └── GraphQLDataGenerator.ts # GraphQL-based data generation
+├── utils/
+│   ├── configLoader.ts        # Configuration loading and validation
+│   └── graphqlParser.ts       # GraphQL schema parsing
+└── __tests__/
+    ├── UserGenerator.test.ts  # User generator tests
+    ├── EventSequencing.test.ts # Event sequencing tests
+    └── GraphQLDataGenerator.test.ts # GraphQL generator tests
 ```
+
+## GraphQL Schema Support
+
+The Demo Data Generator now supports automatic data generation based on GraphQL schema definitions. This feature allows you to upload your customer data platform's GraphQL schema and automatically generate data that matches your exact data model.
+
+### How It Works
+
+1. **Schema Parsing**: The system parses GraphQL schema files (`.graphql` or `.gql`) and extracts type definitions
+2. **Field Mapping**: Automatically maps GraphQL fields to appropriate data generation strategies
+3. **Enum Support**: Correctly handles GraphQL enum types and generates valid enum values
+4. **Type Safety**: Maintains full TypeScript type safety throughout the process
+
+### Usage
+
+#### Basic GraphQL Data Generation
+
+```typescript
+import { GraphQLDataGenerator } from './src/generators/GraphQLDataGenerator';
+
+// Create generator and load schema
+const generator = new GraphQLDataGenerator();
+const success = generator.loadSchema('path/to/your/schema.graphql');
+
+if (success) {
+  // Generate data for specific types
+  const userData = generator.generateDataForType('User', 5);
+  const productData = generator.generateDataForType('Product', 3);
+  
+  // Generate data for all types
+  const allData = generator.generateDataForAllTypes(2);
+}
+```
+
+#### Configuration
+
+Enable GraphQL support in your `config.json`:
+
+```json
+{
+  "graphql": {
+    "enabled": true,
+    "schemaPath": "schema.graphql",
+    "generateAllTypes": true,
+    "recordsPerType": 5,
+    "includeFieldMappings": false
+  }
+}
+```
+
+#### Field Mapping Strategies
+
+The system automatically maps GraphQL fields to data generation strategies:
+
+- **ID fields**: Generate UUIDs
+- **Email fields**: Generate realistic email addresses
+- **Name fields**: Generate appropriate names (firstName, lastName, fullName)
+- **Date/Time fields**: Generate realistic timestamps
+- **Enum fields**: Generate valid enum values from the schema
+- **Custom fields**: Fall back to appropriate data types
+
+#### Supported GraphQL Features
+
+- ✅ Object types
+- ✅ Enum types
+- ✅ Scalar types (String, Int, Float, Boolean, ID, DateTime, etc.)
+- ✅ Array fields
+- ✅ Non-null fields
+- ✅ Nested types
+- ✅ Custom directives (basic support)
+
+### Example Schema
+
+```graphql
+type User {
+  id: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  eventType: EventType!
+  createdAt: DateTime!
+  isActive: Boolean!
+}
+
+enum EventType {
+  PAGE_VIEW
+  SEARCH
+  ADD_TO_CART
+  PURCHASE
+}
+```
+
+Generated data will automatically use valid enum values and appropriate data types.
 
 ## API Reference
 
