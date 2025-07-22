@@ -7,8 +7,7 @@ A TypeScript program for generating realistic demo data for testing and developm
 - **User Generation**: Generate fake user profiles with names, emails, addresses, and contact information
 - **Product Generation**: Create fake products with names, descriptions, prices, categories, and tags
 - **Mixed Data Generation**: Generate various types of data including users, products, orders, and reviews
-- **Interactive Country Selection**: Choose the country for data generation with support for country names and codes
-- **Interactive User Count**: Specify the number of users to generate (with smart defaults)
+- **Configuration-Based**: Uses config.json file for all settings (no interactive input required)
 - **Country-Specific Names**: Uses top 50 first names and surnames for selected countries (US, Canada, UK, Germany, France)
 - **Country-Appropriate Addresses**: Generates realistic cities and states/regions for each country
 - **Gender Distribution**: Automatically generates 53% female and 47% male users
@@ -18,6 +17,8 @@ A TypeScript program for generating realistic demo data for testing and developm
 - **Custom Email Domain**: All generated users use the mediarithmics.com email domain
 - **Logical Event Sequencing**: Events follow realistic user journeys with business logic constraints
 - **High Event Volume**: Each user generates 10-20 events for comprehensive testing
+- **Configurable Probabilities**: All event generation probabilities are configurable
+- **Flexible Output Options**: Configurable output directory, timestamps, and compression
 - **TypeScript**: Fully typed with modern TypeScript features
 - **Faker.js Integration**: Uses the popular Faker.js library for realistic data generation
 
@@ -36,33 +37,83 @@ npm install
 
 ## Usage
 
-### Interactive Mode
-The program will prompt you for two inputs:
+### Configuration-Based Mode
+The program uses a `config.json` file for all settings. No interactive input is required.
 
-1. **Country Selection**: Enter a country for data generation
-2. **User Count**: Specify how many users to generate
+1. **Edit Configuration**: Modify `config.json` to set your desired parameters
+2. **Run the Program**: Execute the program to generate data based on your configuration
 
 ```bash
 npm run dev
 ```
 
-#### Country Input
-You can enter either:
-- **Country name**: "United States", "Canada", "Germany", etc.
-- **Country code**: "US", "CA", "DE", etc.
+#### Configuration File
+The `config.json` file contains all settings:
 
-#### User Count Input
-- **Valid number**: Any positive integer (e.g., "50", "100", "1000")
-- **Invalid input**: Program defaults to 20 users
-- **Empty input**: Program defaults to 20 users
-
-Example interaction:
+```json
+{
+  "dataGeneration": {
+    "country": "US",
+    "userCount": 20,
+    "eventCountPerUser": {
+      "min": 10,
+      "max": 20
+    },
+    "anonymousUserCount": {
+      "min": 5,
+      "max": 10
+    }
+  },
+  "output": {
+    "format": "ndjson",
+    "directory": "output",
+    "includeTimestamp": true,
+    "compressOutput": false
+  },
+  "eventGeneration": {
+    "sessionContinuationProbability": 0.7,
+    "addToCartProbability": 0.3,
+    "viewCartAfterAddProbability": 0.6,
+    "checkoutAfterViewCartProbability": 0.4,
+    "transactionAfterCheckoutProbability": 0.3,
+    "removeFromCartProbability": 0.2
+  },
+  "userProfiles": {
+    "registeredUserProbability": 0.7,
+    "mobileIdProbability": {
+      "registered": 0.3,
+      "anonymous": 0.4
+    }
+  },
+  "logging": {
+    "level": "info",
+    "showProgress": true,
+    "showSummary": true
+  }
+}
 ```
-🌍 Enter country (name or 2-character code): US
-📍 Generating data for country: US
 
-👥 Enter number of users to generate (default: 20): 50
-👥 Generating 50 users...
+#### Quick Start
+1. **Default Configuration**: The program will use default settings if no `config.json` exists
+2. **Custom Configuration**: Edit `config.json` to customize your data generation
+3. **Run**: Execute `npm run dev` to generate data
+
+Example output:
+```
+🚀 Demo Data Generator Starting...
+
+✅ Configuration loaded from 'config.json'
+📍 Generating data for country: US
+👥 Generating 20 users...
+📊 Events per user: 10-20
+
+📊 Generating sample data...
+👥 Generated User Profiles: [20 profiles listed]
+🛍️  Generated Products: [3 products listed]
+🎲 Generated Mixed Data: [10 items listed]
+📊 Generated 441 User Events (last 30 days)
+
+✅ Demo data generation completed successfully!
 ```
 
 ### Development Mode
@@ -378,11 +429,85 @@ output/
 
 ## Configuration
 
+### Configuration File Structure
+
+The `config.json` file controls all aspects of data generation:
+
+#### Data Generation Settings
+- **country**: Country for data generation (name or 2-character code)
+- **userCount**: Number of users to generate
+- **eventCountPerUser**: Range for events per user (min/max)
+- **anonymousUserCount**: Range for anonymous user count (min/max)
+
+#### Output Settings
+- **format**: Output format (currently only 'ndjson' supported)
+- **directory**: Directory to save output files
+- **includeTimestamp**: Whether to include timestamps in filenames
+- **compressOutput**: Whether to compress output files (future feature)
+
+#### Event Generation Settings
+- **sessionContinuationProbability**: Probability of continuing current session vs starting new one
+- **addToCartProbability**: Probability of adding item to cart during browsing
+- **viewCartAfterAddProbability**: Probability of viewing cart after adding item
+- **checkoutAfterViewCartProbability**: Probability of checkout after viewing cart
+- **transactionAfterCheckoutProbability**: Probability of transaction completion after checkout
+- **removeFromCartProbability**: Probability of removing item from cart
+
+#### User Profile Settings
+- **registeredUserProbability**: Probability of user being registered vs anonymous
+- **mobileIdProbability**: Probability of having mobile ID for different user types
+
+#### Logging Settings
+- **level**: Log level (debug, info, warn, error)
+- **showProgress**: Whether to show progress during generation
+- **showSummary**: Whether to show summary after generation
+
+### Default Configuration
+
+If no `config.json` file exists, the program will use sensible defaults:
+
+```json
+{
+  "dataGeneration": {
+    "country": "US",
+    "userCount": 20,
+    "eventCountPerUser": { "min": 10, "max": 20 },
+    "anonymousUserCount": { "min": 5, "max": 10 }
+  },
+  "output": {
+    "format": "ndjson",
+    "directory": "output",
+    "includeTimestamp": true,
+    "compressOutput": false
+  },
+  "eventGeneration": {
+    "sessionContinuationProbability": 0.7,
+    "addToCartProbability": 0.3,
+    "viewCartAfterAddProbability": 0.6,
+    "checkoutAfterViewCartProbability": 0.4,
+    "transactionAfterCheckoutProbability": 0.3,
+    "removeFromCartProbability": 0.2
+  },
+  "userProfiles": {
+    "registeredUserProbability": 0.7,
+    "mobileIdProbability": { "registered": 0.3, "anonymous": 0.4 }
+  },
+  "logging": {
+    "level": "info",
+    "showProgress": true,
+    "showSummary": true
+  }
+}
+```
+
+### Project Configuration Files
+
 The project uses TypeScript with strict type checking enabled. Key configuration files:
 
 - `tsconfig.json`: TypeScript compiler configuration
 - `package.json`: Project dependencies and scripts
 - `jest.config.js`: Testing configuration
+- `config.json`: Data generation settings (created by user)
 
 ## Contributing
 

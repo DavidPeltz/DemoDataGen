@@ -1,0 +1,40 @@
+{
+  "dataGeneration": {
+    "country": "US",
+    "userCount": 20,
+    "eventCountPerUser": {
+      "min": 10,
+      "max": 20
+    },
+    "anonymousUserCount": {
+      "min": 5,
+      "max": 10
+    }
+  },
+  "output": {
+    "format": "ndjson",
+    "directory": "output",
+    "includeTimestamp": true,
+    "compressOutput": false
+  },
+  "eventGeneration": {
+    "sessionContinuationProbability": 0.7,
+    "addToCartProbability": 0.3,
+    "viewCartAfterAddProbability": 0.6,
+    "checkoutAfterViewCartProbability": 0.4,
+    "transactionAfterCheckoutProbability": 0.3,
+    "removeFromCartProbability": 0.2
+  },
+  "userProfiles": {
+    "registeredUserProbability": 0.7,
+    "mobileIdProbability": {
+      "registered": 0.3,
+      "anonymous": 0.4
+    }
+  },
+  "logging": {
+    "level": "info",
+    "showProgress": true,
+    "showSummary": true
+  }
+} 

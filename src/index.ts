@@ -5,6 +5,8 @@
  * It orchestrates the generation of realistic user data, products, and events for
  * testing and development purposes. The application supports country-specific data
  * generation with proper ID linking between user profiles and events.
+ * 
+ * Configuration is loaded from config.json file, with fallback to defaults.
  */
 
 // Core generator imports for creating different types of data
@@ -13,8 +15,11 @@ import { UserGenerator } from './generators/UserGenerator';
 import { ProductGenerator } from './generators/ProductGenerator';
 import { User, EventType } from './types';
 
-// Node.js built-in modules for file system operations and user input
-import * as readline from 'readline';
+// Configuration and utility imports
+import { loadConfig, validateConfig } from './utils/configLoader';
+import { Config } from './types/config';
+
+// Node.js built-in modules for file system operations
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -62,82 +67,37 @@ interface UserEvent {
   country: string;
 }
 
-/**
- * Creates a readline interface for handling user input from the console
- * 
- * @returns readline.Interface - Configured interface for stdin/stdout
- */
-function createReadlineInterface(): readline.Interface {
-  return readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-}
 
-/**
- * Prompts the user for country input and returns the response
- * 
- * This function handles the interactive country selection that determines
- * which country-specific data will be generated (names, addresses, etc.)
- * 
- * @param rl - Readline interface for user input
- * @returns Promise<string> - The country name or code entered by the user
- */
-async function getCountryInput(rl: readline.Interface): Promise<string> {
-  return new Promise((resolve) => {
-    rl.question('🌍 Enter country name or 2-character country code (e.g., "USA" or "US"): ', (answer) => {
-      resolve(answer.trim());
-    });
-  });
-}
-
-/**
- * Prompts the user for the number of users to generate
- * 
- * This function handles the user count input with validation and a default value.
- * If the user enters an invalid number or leaves it empty, it defaults to 20 users.
- * 
- * @param rl - Readline interface for user input
- * @returns Promise<number> - The number of users to generate (minimum 1)
- */
-async function getUserCountInput(rl: readline.Interface): Promise<number> {
-  return new Promise((resolve) => {
-    rl.question('👥 Enter number of users to generate (default: 20): ', (answer) => {
-      const count = parseInt(answer.trim());
-      // Use default of 20 if input is invalid, empty, or less than 1
-      resolve(isNaN(count) || count <= 0 ? 20 : count);
-    });
-  });
-}
 
 /**
  * Converts base User objects into UserProfile objects with tracking information
  * 
  * This function adds profile type classification and generates linking identifiers
- * for each user. It creates a realistic mix of registered (70%) and anonymous (30%)
- * users, with appropriate tracking IDs for web and mobile platforms.
+ * for each user. It creates a realistic mix of registered and anonymous users,
+ * with appropriate tracking IDs for web and mobile platforms.
  * 
  * @param users - Array of base User objects
+ * @param config - Configuration object with user profile settings
  * @returns UserProfile[] - Array of enhanced user profiles with tracking data
  */
-function generateUserProfiles(users: User[]): UserProfile[] {
+function generateUserProfiles(users: User[], config: Config): UserProfile[] {
   return users.map((user) => {
-    // Determine if user is registered (70% probability) or anonymous (30% probability)
-    const isRegistered = faker.datatype.boolean({ probability: 0.7 });
+    // Determine if user is registered or anonymous based on configuration
+    const isRegistered = faker.datatype.boolean({ probability: config.userProfiles.registeredUserProbability });
     
     if (isRegistered) {
       return {
         ...user,
         profileType: 'registered' as const,
         cookieId: faker.string.uuid(), // Always generate cookie ID for web tracking
-        maidId: faker.datatype.boolean({ probability: 0.3 }) ? faker.string.uuid() : undefined // 30% chance of mobile ID
+        maidId: faker.datatype.boolean({ probability: config.userProfiles.mobileIdProbability.registered }) ? faker.string.uuid() : undefined
       };
     } else {
       return {
         ...user,
         profileType: 'anonymous' as const,
         cookieId: faker.string.uuid(), // Always generate cookie ID for web tracking
-        maidId: faker.datatype.boolean({ probability: 0.4 }) ? faker.string.uuid() : undefined // 40% chance of mobile ID
+        maidId: faker.datatype.boolean({ probability: config.userProfiles.mobileIdProbability.anonymous }) ? faker.string.uuid() : undefined
       };
     }
   });
@@ -152,11 +112,15 @@ function generateUserProfiles(users: User[]): UserProfile[] {
  * 
  * @param profile - User profile to generate events for
  * @param country - Country where events occurred
+ * @param config - Configuration object with event generation settings
  * @returns UserEvent[] - Array of logically sequenced events for the user
  */
-function generateUserEventSequence(profile: UserProfile, country: string): UserEvent[] {
+function generateUserEventSequence(profile: UserProfile, country: string, config: Config): UserEvent[] {
   const events: UserEvent[] = [];
-  const eventCount = faker.number.int({ min: 10, max: 20 }); // 10-20 events per user
+  const eventCount = faker.number.int({ 
+    min: config.dataGeneration.eventCountPerUser.min, 
+    max: config.dataGeneration.eventCountPerUser.max 
+  });
   
   // Track user state for logical sequencing
   let hasAddedToCart = false;
@@ -170,8 +134,8 @@ function generateUserEventSequence(profile: UserProfile, country: string): UserE
     // Determine event type based on current state and logical progression
     let eventType: EventType;
     
-    // 70% chance to continue current session, 30% chance to start new session
-    if (i > 0 && faker.datatype.boolean({ probability: 0.3 })) {
+    // Session continuation based on configuration
+    if (i > 0 && faker.datatype.boolean({ probability: 1 - config.eventGeneration.sessionContinuationProbability })) {
       sessionId = faker.string.uuid();
       baseTimestamp = faker.date.recent({ days: 30 });
     }
@@ -180,7 +144,7 @@ function generateUserEventSequence(profile: UserProfile, country: string): UserE
     if (i === 0) {
       // First event is always page_view or search
       eventType = faker.helpers.arrayElement(['page_view', 'search'] as EventType[]);
-    } else if (hasCheckedOut && faker.datatype.boolean({ probability: 0.3 })) {
+    } else if (hasCheckedOut && faker.datatype.boolean({ probability: config.eventGeneration.transactionAfterCheckoutProbability })) {
       // After checkout, can have transaction_complete
       eventType = 'transaction_complete';
     } else if (hasCheckedOut) {
@@ -189,20 +153,20 @@ function generateUserEventSequence(profile: UserProfile, country: string): UserE
         'page_view', 'search', 'article_view', 'video_view', 'audio_listen',
         'ad_view', 'ad_click', 'email_open', 'email_click', 'richpush_open', 'richpush_click'
       ] as EventType[]);
-    } else if (hasViewedCart && faker.datatype.boolean({ probability: 0.4 })) {
+    } else if (hasViewedCart && faker.datatype.boolean({ probability: config.eventGeneration.checkoutAfterViewCartProbability })) {
       // After viewing cart, can checkout
       eventType = 'checkout';
       hasCheckedOut = true;
-    } else if (hasAddedToCart && faker.datatype.boolean({ probability: 0.6 })) {
+    } else if (hasAddedToCart && faker.datatype.boolean({ probability: config.eventGeneration.viewCartAfterAddProbability })) {
       // After adding to cart, likely to view cart
       eventType = 'view_cart';
       hasViewedCart = true;
-    } else if (hasAddedToCart && faker.datatype.boolean({ probability: 0.2 })) {
+    } else if (hasAddedToCart && faker.datatype.boolean({ probability: config.eventGeneration.removeFromCartProbability })) {
       // Can remove items from cart
       eventType = 'remove_itemFromCart';
       cartItems = Math.max(0, cartItems - 1);
-    } else if (faker.datatype.boolean({ probability: 0.3 })) {
-      // 30% chance to add to cart if browsing
+    } else if (faker.datatype.boolean({ probability: config.eventGeneration.addToCartProbability })) {
+      // Chance to add to cart if browsing
       eventType = 'add_itemToCart';
       hasAddedToCart = true;
       cartItems++;
@@ -307,20 +271,24 @@ function generateUserEventSequence(profile: UserProfile, country: string): UserE
  * 
  * @param userProfiles - Array of user profiles to link events to
  * @param country - Country where events occurred
+ * @param config - Configuration object with event generation settings
  * @returns UserEvent[] - Array of user events with proper linking
  */
-function generateUserEvents(userProfiles: UserProfile[], country: string): UserEvent[] {
+function generateUserEvents(userProfiles: UserProfile[], country: string, config: Config): UserEvent[] {
   const events: UserEvent[] = [];
   
   // Generate events for known users (both registered and anonymous profiles)
   userProfiles.forEach((profile) => {
-    const userEvents = generateUserEventSequence(profile, country);
+    const userEvents = generateUserEventSequence(profile, country, config);
     events.push(...userEvents);
   });
   
   // Generate additional anonymous events (no associated user profile)
   // This simulates users who haven't created profiles but are still tracked
-  const anonymousUserCount = faker.number.int({ min: 5, max: 10 });
+  const anonymousUserCount = faker.number.int({ 
+    min: config.dataGeneration.anonymousUserCount.min, 
+    max: config.dataGeneration.anonymousUserCount.max 
+  });
   for (let i = 0; i < anonymousUserCount; i++) {
     const anonymousProfile: UserProfile = {
       id: faker.string.uuid(),
@@ -337,10 +305,10 @@ function generateUserEvents(userProfiles: UserProfile[], country: string): UserE
       createdAt: faker.date.past(),
       profileType: 'anonymous',
       cookieId: faker.string.uuid(),
-      maidId: faker.datatype.boolean({ probability: 0.3 }) ? faker.string.uuid() : undefined
+      maidId: faker.datatype.boolean({ probability: config.userProfiles.mobileIdProbability.anonymous }) ? faker.string.uuid() : undefined
     };
     
-    const anonymousEvents = generateUserEventSequence(anonymousProfile, country);
+    const anonymousEvents = generateUserEventSequence(anonymousProfile, country, config);
     events.push(...anonymousEvents);
   }
   
@@ -357,10 +325,11 @@ function generateUserEvents(userProfiles: UserProfile[], country: string): UserE
  * @param userProfiles - Array of user profiles to save
  * @param events - Array of user events to save
  * @param country - Country name used for file naming
+ * @param config - Configuration object with output settings
  */
-function saveDataToFiles(userProfiles: UserProfile[], events: UserEvent[], country: string): void {
-  // Create output directory in the current working directory
-  const outputDir = path.join(process.cwd(), 'output');
+function saveDataToFiles(userProfiles: UserProfile[], events: UserEvent[], country: string, config: Config): void {
+  // Create output directory based on configuration
+  const outputDir = path.join(process.cwd(), config.output.directory);
   
   // Create output directory if it doesn't exist
   if (!fs.existsSync(outputDir)) {
@@ -370,28 +339,33 @@ function saveDataToFiles(userProfiles: UserProfile[], events: UserEvent[], count
   // Normalize country name for file naming (lowercase, replace spaces with underscores)
   const normalizedCountry = country.toLowerCase().replace(/\s+/g, '_');
   
+  // Add timestamp to filename if configured
+  const timestamp = config.output.includeTimestamp ? `_${new Date().toISOString().replace(/[:.]/g, '-')}` : '';
+  
   // Save user profiles to NDJSON file
-  const userProfilesPath = path.join(outputDir, `user_profiles_${normalizedCountry}.ndjson`);
+  const userProfilesPath = path.join(outputDir, `user_profiles_${normalizedCountry}${timestamp}.ndjson`);
   const userProfilesContent = userProfiles.map(profile => JSON.stringify(profile)).join('\n');
   fs.writeFileSync(userProfilesPath, userProfilesContent);
   
   // Save events to NDJSON file
-  const eventsPath = path.join(outputDir, `user_events_${normalizedCountry}.ndjson`);
+  const eventsPath = path.join(outputDir, `user_events_${normalizedCountry}${timestamp}.ndjson`);
   const eventsContent = events.map(event => JSON.stringify(event)).join('\n');
   fs.writeFileSync(eventsPath, eventsContent);
   
-  // Display file paths to user
-  console.log(`📁 Data saved to:`);
-  console.log(`   👥 User profiles: ${userProfilesPath}`);
-  console.log(`   📊 User events: ${eventsPath}`);
+  // Display file paths to user if summary is enabled
+  if (config.logging.showSummary) {
+    console.log(`📁 Data saved to:`);
+    console.log(`   👥 User profiles: ${userProfilesPath}`);
+    console.log(`   📊 User events: ${eventsPath}`);
+  }
 }
 
 /**
  * Main entry point for the Demo Data Generator application
  * 
  * This function orchestrates the entire data generation process:
- * 1. Gets country input from user
- * 2. Gets user count input from user
+ * 1. Loads configuration from config.json file
+ * 2. Validates configuration settings
  * 3. Initializes data generators
  * 4. Generates users, products, and mixed data
  * 5. Creates user profiles with tracking information
@@ -403,17 +377,16 @@ function saveDataToFiles(userProfiles: UserProfile[], events: UserEvent[], count
 async function main(): Promise<void> {
   console.log('🚀 Demo Data Generator Starting...\n');
 
-  // Create readline interface for user interaction
-  const rl = createReadlineInterface();
-
   try {
-    // Step 1: Get country input from user
-    const countryInput = await getCountryInput(rl);
-    console.log(`📍 Generating data for country: ${countryInput}\n`);
-
-    // Step 2: Get user count input from user
-    const userCount = await getUserCountInput(rl);
-    console.log(`👥 Generating ${userCount} users...\n`);
+    // Step 1: Load configuration from config.json
+    const config = loadConfig();
+    
+    // Step 2: Validate configuration
+    validateConfig(config);
+    
+    console.log(`📍 Generating data for country: ${config.dataGeneration.country}`);
+    console.log(`👥 Generating ${config.dataGeneration.userCount} users...`);
+    console.log(`📊 Events per user: ${config.dataGeneration.eventCountPerUser.min}-${config.dataGeneration.eventCountPerUser.max}\n`);
 
     // Step 3: Initialize data generators
     const userGenerator = new UserGenerator();
@@ -421,56 +394,62 @@ async function main(): Promise<void> {
     const dataGenerator = new DataGenerator();
 
     // Step 4: Generate sample data
-    console.log('📊 Generating sample data...\n');
+    if (config.logging.showProgress) {
+      console.log('📊 Generating sample data...\n');
+    }
 
     // Generate users for the specified country with country-specific data
-    const users = userGenerator.generateUsersForCountry(userCount, countryInput);
+    const users = userGenerator.generateUsersForCountry(config.dataGeneration.userCount, config.dataGeneration.country);
     
     // Convert users to profiles with tracking information
-    const userProfiles = generateUserProfiles(users);
+    const userProfiles = generateUserProfiles(users, config);
     
     // Display generated user profiles with visual indicators
-    console.log('👥 Generated User Profiles:');
-    userProfiles.forEach((profile, index) => {
-      const profileType = profile.profileType === 'registered' ? '📝' : '👤';
-      console.log(`  ${index + 1}. ${profileType} ${profile.firstName} ${profile.lastName} (${profile.email}) - ${profile.address.country} [${profile.profileType}]`);
-    });
-
-    console.log('\n');
+    if (config.logging.showSummary) {
+      console.log('👥 Generated User Profiles:');
+      userProfiles.forEach((profile, index) => {
+        const profileType = profile.profileType === 'registered' ? '📝' : '👤';
+        console.log(`  ${index + 1}. ${profileType} ${profile.firstName} ${profile.lastName} (${profile.email}) - ${profile.address.country} [${profile.profileType}]`);
+      });
+      console.log('\n');
+    }
 
     // Generate 3 sample products
     const products = productGenerator.generateProducts(3);
-    console.log('🛍️  Generated Products:');
-    products.forEach((product, index) => {
-      console.log(`  ${index + 1}. ${product.name} - $${product.price.toFixed(2)}`);
-    });
-
-    console.log('\n');
+    if (config.logging.showSummary) {
+      console.log('🛍️  Generated Products:');
+      products.forEach((product, index) => {
+        console.log(`  ${index + 1}. ${product.name} - $${product.price.toFixed(2)}`);
+      });
+      console.log('\n');
+    }
 
     // Generate 10 mixed data items (users, products, orders, reviews, anonymous events)
     const mixedData = dataGenerator.generateMixedData(10);
-    console.log('🎲 Generated Mixed Data:');
-    mixedData.forEach((item, index) => {
-      console.log(`  ${index + 1}. ${item.type}: ${item.description}`);
-    });
-
-    console.log('\n');
+    if (config.logging.showSummary) {
+      console.log('🎲 Generated Mixed Data:');
+      mixedData.forEach((item, index) => {
+        console.log(`  ${index + 1}. ${item.type}: ${item.description}`);
+      });
+      console.log('\n');
+    }
 
     // Generate user events with proper linking to profiles
-    const events = generateUserEvents(userProfiles, countryInput);
-    console.log(`📊 Generated ${events.length} User Events (last 30 days)`);
+    const events = generateUserEvents(userProfiles, config.dataGeneration.country, config);
+    if (config.logging.showSummary) {
+      console.log(`📊 Generated ${events.length} User Events (last 30 days)`);
+    }
     
     // Save all generated data to files
-    saveDataToFiles(userProfiles, events, countryInput);
+    saveDataToFiles(userProfiles, events, config.dataGeneration.country, config);
 
-    console.log('\n✅ Demo data generation completed successfully!');
+    if (config.logging.showSummary) {
+      console.log('\n✅ Demo data generation completed successfully!');
+    }
 
   } catch (error) {
     console.error('❌ Error generating demo data:', error);
     process.exit(1);
-  } finally {
-    // Always close the readline interface to prevent hanging
-    rl.close();
   }
 }
 
