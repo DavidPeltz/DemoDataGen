@@ -1,7 +1,7 @@
 {
   "name": "demo-data-gen",
   "version": "1.0.0",
-  "description": "A TypeScript program for generating demo data",
+  "description": "A TypeScript program for generating demo data with GraphQL schema support",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -15,7 +15,10 @@
     "typescript",
     "demo",
     "data",
-    "generator"
+    "generator",
+    "graphql",
+    "schema",
+    "cdp"
   ],
   "author": "",
   "license": "MIT",

@@ -6,6 +6,9 @@
  * testing and development purposes. The application supports country-specific data
  * generation with proper ID linking between user profiles and events.
  * 
+ * The application also supports GraphQL schema-based data generation, allowing
+ * automatic data creation based on customer data platform schema definitions.
+ * 
  * Configuration is loaded from config.json file, with fallback to defaults.
  */
 
@@ -366,7 +369,7 @@ function saveDataToFiles(userProfiles: UserProfile[], events: UserEvent[], count
  * This function orchestrates the entire data generation process:
  * 1. Loads configuration from config.json file
  * 2. Validates configuration settings
- * 3. Initializes data generators
+ * 3. Initializes data generators (including GraphQL if enabled)
  * 4. Generates users, products, and mixed data
  * 5. Creates user profiles with tracking information
  * 6. Generates user events with proper linking

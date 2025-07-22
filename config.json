@@ -36,5 +36,11 @@
     "level": "info",
     "showProgress": true,
     "showSummary": true
+  },
+  "graphql": {
+    "enabled": false,
+    "generateAllTypes": true,
+    "recordsPerType": 5,
+    "includeFieldMappings": false
   }
 } 
