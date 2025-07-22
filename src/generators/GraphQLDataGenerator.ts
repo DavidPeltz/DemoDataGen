@@ -167,13 +167,14 @@ export class GraphQLDataGenerator {
     const strategy = this.getGenerationStrategy(field, parentType);
     
     if (!strategy) {
+      // Only add warnings for truly problematic cases, not for every unknown field
       return this.generateDefaultValue(field);
     }
     
     const value = this.generateValueByStrategy(strategy, field);
     
-    // Handle arrays
-    if (field.isArray) {
+    // Handle arrays - but only if not already handled by generateDefaultValue
+    if (field.isArray && !Array.isArray(value)) {
       const arrayLength = faker.number.int({ min: 1, max: 5 });
       return Array.from({ length: arrayLength }, () => value);
     }
@@ -245,6 +246,8 @@ export class GraphQLDataGenerator {
     if (fieldNameLower.includes('payment')) return 'paymentMethod';
     if (fieldNameLower.includes('status')) return 'orderStatus';
     
+    // Don't add warnings for every unknown field name to reduce verbosity
+    // Only add warnings for truly problematic cases
     return null;
   }
 
@@ -422,6 +425,16 @@ export class GraphQLDataGenerator {
   private generateDefaultValue(field: GraphQLField): any {
     const baseType = this.getBaseType(field.type);
     
+    // Check if it's an array type
+    if (field.isArray) {
+      return this.generateArrayValue(field);
+    }
+    
+    // Check if it's a custom object type
+    if (baseType.kind === 'OBJECT') {
+      return this.generateCustomObjectValue(field);
+    }
+    
     switch (baseType.name) {
       case 'String':
         return faker.lorem.word();
@@ -440,8 +453,85 @@ export class GraphQLDataGenerator {
       case 'JSON':
         return { key: faker.lorem.word(), value: faker.lorem.word() };
       default:
-        return null;
+        // Generate a placeholder object instead of null for unknown types
+        return this.generatePlaceholderObject(field);
     }
+  }
+
+  /**
+   * Generates an array value for a field
+   * 
+   * @param field - GraphQL field definition
+   * @returns any[] - Generated array value
+   */
+  private generateArrayValue(field: GraphQLField): any[] {
+    const baseType = this.getBaseType(field.type);
+    const arrayLength = faker.number.int({ min: 1, max: 3 });
+    
+    // Generate array of appropriate type
+    switch (baseType.name) {
+      case 'String':
+        return Array.from({ length: arrayLength }, () => faker.lorem.word());
+      case 'Int':
+        return Array.from({ length: arrayLength }, () => faker.number.int({ min: 1, max: 100 }));
+      case 'Float':
+        return Array.from({ length: arrayLength }, () => parseFloat(faker.commerce.price()));
+      case 'Boolean':
+        return Array.from({ length: arrayLength }, () => faker.datatype.boolean());
+      case 'ID':
+        return Array.from({ length: arrayLength }, () => faker.string.uuid());
+      default:
+        // For custom types, generate placeholder objects
+        return Array.from({ length: arrayLength }, () => this.generatePlaceholderObject(field));
+    }
+  }
+
+  /**
+   * Generates a custom object value for a field
+   * 
+   * @param field - GraphQL field definition
+   * @returns any - Generated custom object value
+   */
+  private generateCustomObjectValue(field: GraphQLField): any {
+    if (!this.schema) {
+      return this.generatePlaceholderObject(field);
+    }
+    
+    const baseType = this.getBaseType(field.type);
+    const objectType = this.schema.types.find(t => t.name === baseType.name && t.kind === 'OBJECT');
+    
+    if (objectType && objectType.fields) {
+      const result: Record<string, any> = {};
+      
+      for (const objectField of objectType.fields) {
+        result[objectField.name] = this.generateFieldValue(objectField, objectType);
+      }
+      
+      return result;
+    }
+    
+    return this.generatePlaceholderObject(field);
+  }
+
+  /**
+   * Generates a placeholder object for unknown field types
+   * 
+   * @param field - GraphQL field definition
+   * @returns any - Generated placeholder object
+   */
+  private generatePlaceholderObject(field: GraphQLField): any {
+    const baseType = this.getBaseType(field.type);
+    
+    // Add warning for unknown type
+    this.warnings.push(`Unknown field type '${baseType.name}' for field '${field.name}'. Using placeholder object.`);
+    
+    return {
+      _type: baseType.name,
+      _placeholder: true,
+      _fieldName: field.name,
+      _generatedAt: new Date().toISOString(),
+      value: faker.lorem.word()
+    };
   }
 
   /**

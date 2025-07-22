@@ -198,7 +198,7 @@ function parseField(fieldLine: string, result: SchemaParseResult): GraphQLField 
         name: fieldName,
         type: fieldType,
         isRequired: typeString.endsWith('!'),
-        isArray: typeString.startsWith('[') && typeString.endsWith(']')
+        isArray: typeString.includes('[') && typeString.includes(']')
       };
       
           return field;
