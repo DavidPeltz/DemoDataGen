@@ -15,7 +15,7 @@
  */
 
 import { faker } from '@faker-js/faker';
-import { MixedDataItem } from '../types';
+import { MixedDataItem, EventType } from '../types';
 import { UserGenerator } from './UserGenerator';
 import { ProductGenerator } from './ProductGenerator';
 
@@ -129,24 +129,91 @@ export class DataGenerator {
         };
 
       case 'anonymous_event':
-        // Generate anonymous user interaction events (no personal data)
+        // Generate anonymous user interaction events with logical sequencing
+        
+        // Generate a sequence of 10-20 events for this anonymous user
+        const eventSequence = [];
+        let hasAddedToCart = false;
+        let hasViewedCart = false;
+        let hasCheckedOut = false;
+        let cartItems = 0;
+        const sessionId = faker.string.uuid();
+        const baseTimestamp = faker.date.recent();
+        
+        const eventCount = faker.number.int({ min: 10, max: 20 });
+        for (let i = 0; i < eventCount; i++) {
+          let eventType: EventType;
+          
+          // Apply logical constraints
+          if (i === 0) {
+            eventType = faker.helpers.arrayElement(['page_view', 'search'] as EventType[]);
+          } else if (hasCheckedOut && faker.datatype.boolean({ probability: 0.3 })) {
+            eventType = 'transaction_complete';
+          } else if (hasCheckedOut) {
+            eventType = faker.helpers.arrayElement([
+              'page_view', 'search', 'article_view', 'video_view', 'audio_listen',
+              'ad_view', 'ad_click', 'email_open', 'email_click', 'richpush_open', 'richpush_click'
+            ] as EventType[]);
+          } else if (hasViewedCart && faker.datatype.boolean({ probability: 0.4 })) {
+            eventType = 'checkout';
+            hasCheckedOut = true;
+          } else if (hasAddedToCart && faker.datatype.boolean({ probability: 0.6 })) {
+            eventType = 'view_cart';
+            hasViewedCart = true;
+          } else if (hasAddedToCart && faker.datatype.boolean({ probability: 0.2 })) {
+            eventType = 'remove_itemFromCart';
+            cartItems = Math.max(0, cartItems - 1);
+          } else if (faker.datatype.boolean({ probability: 0.3 })) {
+            eventType = 'add_itemToCart';
+            hasAddedToCart = true;
+            cartItems++;
+          } else {
+            eventType = faker.helpers.arrayElement([
+              'page_view', 'search', 'article_view', 'video_view', 'audio_listen',
+              'ad_view', 'ad_click', 'email_open', 'email_click', 'richpush_open', 'richpush_click'
+            ] as EventType[]);
+          }
+          
+          eventSequence.push({
+            id: faker.string.uuid(),
+            eventType,
+            pageUrl: faker.internet.url(),
+            userAgent: faker.internet.userAgent(),
+            ipAddress: faker.internet.ip(),
+            timestamp: new Date(baseTimestamp.getTime() + (i * faker.number.int({ min: 1000, max: 300000 }))),
+            sessionId,
+            referrer: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.7 }),
+            deviceType: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
+            browser: faker.helpers.arrayElement(['Chrome', 'Firefox', 'Safari', 'Edge']),
+            os: faker.helpers.arrayElement(['Windows', 'macOS', 'Linux', 'iOS', 'Android']),
+            // Add context-specific data
+            ...(eventType === 'add_itemToCart' && { 
+              productId: faker.string.uuid(),
+              productName: faker.commerce.productName(),
+              quantity: faker.number.int({ min: 1, max: 3 }),
+              price: parseFloat(faker.commerce.price())
+            }),
+            ...(eventType === 'search' && { 
+              query: faker.helpers.arrayElement([
+                'laptop', 'phone', 'headphones', 'shoes', 'dress', 'book', 'camera', 'watch'
+              ]),
+              resultsCount: faker.number.int({ min: 10, max: 1000 })
+            })
+          });
+        }
+        
         const anonymousEvent = {
           id: faker.string.uuid(),
-          eventType: faker.helpers.arrayElement(['page_view', 'click', 'scroll', 'form_submit', 'download']),
-          pageUrl: faker.internet.url(),
-          userAgent: faker.internet.userAgent(),
-          ipAddress: faker.internet.ip(),
-          timestamp: faker.date.recent(),
-          sessionId: faker.string.uuid(),
-          referrer: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.7 }), // 70% chance of having a referrer
-          deviceType: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
-          browser: faker.helpers.arrayElement(['Chrome', 'Firefox', 'Safari', 'Edge']),
-          os: faker.helpers.arrayElement(['Windows', 'macOS', 'Linux', 'iOS', 'Android']),
+          eventSequence,
+          sessionId,
+          totalEvents: eventCount,
+          hasCompletedTransaction: hasCheckedOut,
+          finalCartItems: cartItems
         };
         return {
           id,
           type,
-          description: `Anonymous Event: ${anonymousEvent.eventType} on ${anonymousEvent.pageUrl}`,
+          description: `Anonymous Event Sequence: ${eventCount} events with ${hasCheckedOut ? 'completed transaction' : 'no transaction'}`,
           data: anonymousEvent,
           createdAt,
         };

@@ -16,6 +16,8 @@ A TypeScript program for generating realistic demo data for testing and developm
 - **File Output**: Saves data to newline-delimited JSON files for easy processing
 - **ID Linking**: Links users and events through cookie IDs and MAID IDs for analytics
 - **Custom Email Domain**: All generated users use the mediarithmics.com email domain
+- **Logical Event Sequencing**: Events follow realistic user journeys with business logic constraints
+- **High Event Volume**: Each user generates 10-20 events for comprehensive testing
 - **TypeScript**: Fully typed with modern TypeScript features
 - **Faker.js Integration**: Uses the popular Faker.js library for realistic data generation
 
@@ -201,7 +203,7 @@ interface Product {
 ```typescript
 interface MixedDataItem {
   id: string;
-  type: 'user' | 'product' | 'order' | 'review';
+  type: 'user' | 'product' | 'order' | 'review' | 'anonymous_event';
   description: string;
   data: User | Product | Record<string, unknown>;
   createdAt: Date;
@@ -236,13 +238,52 @@ For countries not in this list, the program falls back to faker.js default names
 
 ## Data Types
 
+### Event Types
+The program generates user events with comprehensive event types covering various user interactions:
+
+```typescript
+type EventType = 
+  | 'page_view'           // User viewed a page
+  | 'search'              // User performed a search
+  | 'article_view'        // User viewed an article
+  | 'video_view'          // User viewed a video
+  | 'audio_listen'        // User listened to audio content
+  | 'ad_view'             // User viewed an advertisement
+  | 'ad_click'            // User clicked on an advertisement
+  | 'email_open'          // User opened an email
+  | 'email_click'         // User clicked a link in an email
+  | 'add_itemToCart'      // User added item to shopping cart
+  | 'remove_itemFromCart' // User removed item from shopping cart
+  | 'transaction_complete' // User completed a transaction
+  | 'checkout'            // User initiated checkout process
+  | 'view_cart'           // User viewed shopping cart
+  | 'richpush_open'       // User opened a rich push notification
+  | 'richpush_click';     // User clicked on a rich push notification
+```
+
+### Event Sequencing Logic
+The program generates realistic user journeys with proper event sequencing and business logic:
+
+#### Logical Constraints
+- **Transaction Flow**: `transaction_complete` events only occur after `add_itemToCart` and `checkout` events
+- **Cart Management**: `view_cart` events typically follow `add_itemToCart` events
+- **Checkout Process**: `checkout` events follow `view_cart` events
+- **Session Management**: Events are grouped into logical sessions with consistent session IDs
+- **Event Count**: Each user (registered or anonymous) generates 10-20 events
+
+#### Event Sequences
+The generator creates realistic user journeys such as:
+1. `page_view` → `search` → `page_view` → `add_itemToCart` → `view_cart` → `checkout` → `transaction_complete`
+2. `page_view` → `article_view` → `video_view` → `ad_view` → `ad_click` → `add_itemToCart` → `view_cart`
+3. `email_open` → `email_click` → `page_view` → `search` → `add_itemToCart` → `remove_itemFromCart`
+
 ### Anonymous Events
 The program generates anonymous user events that don't contain personal information:
 
 ```typescript
 interface AnonymousEvent {
   id: string;
-  eventType: 'page_view' | 'click' | 'scroll' | 'form_submit' | 'download';
+  eventType: EventType;   // Uses the comprehensive event type list above
   pageUrl: string;
   userAgent: string;
   ipAddress: string;
@@ -252,6 +293,27 @@ interface AnonymousEvent {
   deviceType: 'desktop' | 'mobile' | 'tablet';
   browser: 'Chrome' | 'Firefox' | 'Safari' | 'Edge';
   os: 'Windows' | 'macOS' | 'Linux' | 'iOS' | 'Android';
+  // Context-specific data based on event type
+  productId?: string;           // For add_itemToCart, remove_itemFromCart
+  productName?: string;         // For add_itemToCart, remove_itemFromCart
+  quantity?: number;            // For add_itemToCart, remove_itemFromCart
+  price?: number;               // For add_itemToCart
+  itemCount?: number;           // For view_cart, checkout
+  totalValue?: number;          // For view_cart, checkout, transaction_complete
+  paymentMethod?: string;       // For checkout, transaction_complete
+  orderId?: string;             // For transaction_complete
+  shippingAddress?: string;     // For transaction_complete
+  query?: string;               // For search
+  resultsCount?: number;        // For search
+  emailId?: string;             // For email_open, email_click
+  subject?: string;             // For email_open
+  campaignId?: string;          // For email_open
+  linkUrl?: string;             // For email_click
+  linkText?: string;            // For email_click
+  notificationId?: string;      // For richpush_open, richpush_click
+  title?: string;               // For richpush_open
+  body?: string;                // For richpush_open
+  action?: string;              // For richpush_click
 }
 ```
 
@@ -291,7 +353,7 @@ interface UserEvent {
   userId?: string;         // For known users
   cookieId?: string;       // For anonymous web users
   maidId?: string;         // For anonymous mobile app users
-  eventType: string;       // page_view, click, scroll, form_submit, download, purchase
+  eventType: EventType;    // Comprehensive list of event types (see Event Types section above)
   eventData: Record<string, unknown>;
   timestamp: Date;         // Within last 30 days
   country: string;

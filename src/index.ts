@@ -11,7 +11,7 @@
 import { DataGenerator } from './generators/DataGenerator';
 import { UserGenerator } from './generators/UserGenerator';
 import { ProductGenerator } from './generators/ProductGenerator';
-import { User } from './types';
+import { User, EventType } from './types';
 
 // Node.js built-in modules for file system operations and user input
 import * as readline from 'readline';
@@ -56,7 +56,7 @@ interface UserEvent {
   userId?: string | undefined; // For known users
   cookieId?: string | undefined; // For anonymous web users
   maidId?: string | undefined; // For anonymous mobile app users
-  eventType: string;
+  eventType: EventType;
   eventData: Record<string, unknown>;
   timestamp: Date;
   country: string;
@@ -144,6 +144,161 @@ function generateUserProfiles(users: User[]): UserProfile[] {
 }
 
 /**
+ * Generates a logical sequence of events for a single user
+ * 
+ * This function creates realistic user journeys with proper event sequencing.
+ * It ensures business logic is followed (e.g., transaction_complete requires
+ * add_itemToCart and checkout events to precede it).
+ * 
+ * @param profile - User profile to generate events for
+ * @param country - Country where events occurred
+ * @returns UserEvent[] - Array of logically sequenced events for the user
+ */
+function generateUserEventSequence(profile: UserProfile, country: string): UserEvent[] {
+  const events: UserEvent[] = [];
+  const eventCount = faker.number.int({ min: 10, max: 20 }); // 10-20 events per user
+  
+  // Track user state for logical sequencing
+  let hasAddedToCart = false;
+  let hasViewedCart = false;
+  let hasCheckedOut = false;
+  let cartItems = 0;
+  let sessionId = faker.string.uuid();
+  let baseTimestamp = faker.date.recent({ days: 30 });
+  
+  for (let i = 0; i < eventCount; i++) {
+    // Determine event type based on current state and logical progression
+    let eventType: EventType;
+    
+    // 70% chance to continue current session, 30% chance to start new session
+    if (i > 0 && faker.datatype.boolean({ probability: 0.3 })) {
+      sessionId = faker.string.uuid();
+      baseTimestamp = faker.date.recent({ days: 30 });
+    }
+    
+    // Generate event type with logical constraints
+    if (i === 0) {
+      // First event is always page_view or search
+      eventType = faker.helpers.arrayElement(['page_view', 'search'] as EventType[]);
+    } else if (hasCheckedOut && faker.datatype.boolean({ probability: 0.3 })) {
+      // After checkout, can have transaction_complete
+      eventType = 'transaction_complete';
+    } else if (hasCheckedOut) {
+      // After checkout, mostly browsing events
+      eventType = faker.helpers.arrayElement([
+        'page_view', 'search', 'article_view', 'video_view', 'audio_listen',
+        'ad_view', 'ad_click', 'email_open', 'email_click', 'richpush_open', 'richpush_click'
+      ] as EventType[]);
+    } else if (hasViewedCart && faker.datatype.boolean({ probability: 0.4 })) {
+      // After viewing cart, can checkout
+      eventType = 'checkout';
+      hasCheckedOut = true;
+    } else if (hasAddedToCart && faker.datatype.boolean({ probability: 0.6 })) {
+      // After adding to cart, likely to view cart
+      eventType = 'view_cart';
+      hasViewedCart = true;
+    } else if (hasAddedToCart && faker.datatype.boolean({ probability: 0.2 })) {
+      // Can remove items from cart
+      eventType = 'remove_itemFromCart';
+      cartItems = Math.max(0, cartItems - 1);
+    } else if (faker.datatype.boolean({ probability: 0.3 })) {
+      // 30% chance to add to cart if browsing
+      eventType = 'add_itemToCart';
+      hasAddedToCart = true;
+      cartItems++;
+    } else {
+      // Default to browsing events
+      eventType = faker.helpers.arrayElement([
+        'page_view', 'search', 'article_view', 'video_view', 'audio_listen',
+        'ad_view', 'ad_click', 'email_open', 'email_click', 'richpush_open', 'richpush_click'
+      ] as EventType[]);
+    }
+    
+    // Create event with realistic data
+    const event: UserEvent = {
+      id: faker.string.uuid(),
+      userId: profile.profileType === 'registered' ? profile.id : undefined,
+      cookieId: profile.cookieId,
+      maidId: profile.maidId,
+      eventType,
+      eventData: {
+        pageUrl: faker.internet.url(),
+        userAgent: faker.internet.userAgent(),
+        ipAddress: faker.internet.ip(),
+        sessionId,
+        referrer: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.7 }),
+        deviceType: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
+        browser: faker.helpers.arrayElement(['Chrome', 'Firefox', 'Safari', 'Edge']),
+        os: faker.helpers.arrayElement(['Windows', 'macOS', 'Linux', 'iOS', 'Android']),
+        // Add context-specific data
+        ...(eventType === 'add_itemToCart' && { 
+          productId: faker.string.uuid(),
+          productName: faker.commerce.productName(),
+          quantity: faker.number.int({ min: 1, max: 3 }),
+          price: parseFloat(faker.commerce.price())
+        }),
+        ...(eventType === 'remove_itemFromCart' && { 
+          productId: faker.string.uuid(),
+          productName: faker.commerce.productName(),
+          quantity: faker.number.int({ min: 1, max: 2 })
+        }),
+        ...(eventType === 'view_cart' && { 
+          itemCount: cartItems,
+          totalValue: parseFloat(faker.commerce.price({ min: 10, max: 500 }))
+        }),
+        ...(eventType === 'checkout' && { 
+          itemCount: cartItems,
+          totalValue: parseFloat(faker.commerce.price({ min: 10, max: 500 })),
+          paymentMethod: faker.helpers.arrayElement(['credit_card', 'paypal', 'apple_pay', 'google_pay'])
+        }),
+        ...(eventType === 'transaction_complete' && { 
+          orderId: faker.string.uuid(),
+          totalValue: parseFloat(faker.commerce.price({ min: 10, max: 500 })),
+          paymentMethod: faker.helpers.arrayElement(['credit_card', 'paypal', 'apple_pay', 'google_pay']),
+          shippingAddress: faker.location.streetAddress()
+        }),
+        ...(eventType === 'search' && { 
+          query: faker.helpers.arrayElement([
+            'laptop', 'phone', 'headphones', 'shoes', 'dress', 'book', 'camera', 'watch'
+          ]),
+          resultsCount: faker.number.int({ min: 10, max: 1000 })
+        }),
+        ...(eventType === 'email_open' && { 
+          emailId: faker.string.uuid(),
+          subject: faker.helpers.arrayElement([
+            'Your order confirmation', 'New products available', 'Special offer just for you',
+            'Welcome to our store', 'Flash sale - 50% off!'
+          ]),
+          campaignId: faker.string.uuid()
+        }),
+        ...(eventType === 'email_click' && { 
+          emailId: faker.string.uuid(),
+          linkUrl: faker.internet.url(),
+          linkText: faker.helpers.arrayElement(['Shop Now', 'Learn More', 'View Details', 'Get Offer'])
+        }),
+        ...(eventType === 'richpush_open' && { 
+          notificationId: faker.string.uuid(),
+          title: faker.helpers.arrayElement([
+            'New arrivals!', 'Flash sale alert', 'Order update', 'Personalized recommendations'
+          ]),
+          body: faker.lorem.sentence()
+        }),
+        ...(eventType === 'richpush_click' && { 
+          notificationId: faker.string.uuid(),
+          action: faker.helpers.arrayElement(['view_product', 'open_cart', 'browse_category'])
+        })
+      },
+      timestamp: new Date(baseTimestamp.getTime() + (i * faker.number.int({ min: 1000, max: 300000 }))), // Sequential timestamps
+      country
+    };
+    
+    events.push(event);
+  }
+  
+  return events;
+}
+
+/**
  * Generates user events with proper linking to user profiles
  * 
  * This function creates realistic user interaction events that can be correlated
@@ -159,57 +314,34 @@ function generateUserEvents(userProfiles: UserProfile[], country: string): UserE
   
   // Generate events for known users (both registered and anonymous profiles)
   userProfiles.forEach((profile) => {
-    // Each user gets 1-5 events to simulate realistic usage patterns
-    const eventCount = faker.number.int({ min: 1, max: 5 });
-    
-    for (let i = 0; i < eventCount; i++) {
-      const event: UserEvent = {
-        id: faker.string.uuid(),
-        // Only link userId for registered users (anonymous profiles don't have userId)
-        userId: profile.profileType === 'registered' ? profile.id : undefined,
-        cookieId: profile.cookieId, // Always include cookie ID for web tracking
-        maidId: profile.maidId, // Include mobile ID if available
-        eventType: faker.helpers.arrayElement(['page_view', 'click', 'scroll', 'form_submit', 'download', 'purchase']),
-        eventData: {
-          pageUrl: faker.internet.url(),
-          userAgent: faker.internet.userAgent(),
-          ipAddress: faker.internet.ip(),
-          sessionId: faker.string.uuid(),
-          referrer: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.7 }), // 70% chance of referrer
-          deviceType: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
-          browser: faker.helpers.arrayElement(['Chrome', 'Firefox', 'Safari', 'Edge']),
-          os: faker.helpers.arrayElement(['Windows', 'macOS', 'Linux', 'iOS', 'Android']),
-        },
-        timestamp: faker.date.recent({ days: 30 }), // Events within last 30 days
-        country
-      };
-      events.push(event);
-    }
+    const userEvents = generateUserEventSequence(profile, country);
+    events.push(...userEvents);
   });
   
   // Generate additional anonymous events (no associated user profile)
   // This simulates users who haven't created profiles but are still tracked
-  const anonymousEventCount = faker.number.int({ min: 10, max: 20 });
-  for (let i = 0; i < anonymousEventCount; i++) {
-    const event: UserEvent = {
+  const anonymousUserCount = faker.number.int({ min: 5, max: 10 });
+  for (let i = 0; i < anonymousUserCount; i++) {
+    const anonymousProfile: UserProfile = {
       id: faker.string.uuid(),
-      cookieId: faker.string.uuid(), // Generate new cookie ID for anonymous event
-      maidId: faker.datatype.boolean({ probability: 0.3 }) ? faker.string.uuid() : undefined, // 30% chance of mobile ID
-      eventType: faker.helpers.arrayElement(['page_view', 'click', 'scroll', 'form_submit', 'download']),
-      eventData: {
-        pageUrl: faker.internet.url(),
-        userAgent: faker.internet.userAgent(),
-        ipAddress: faker.internet.ip(),
-        sessionId: faker.string.uuid(),
-        referrer: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.7 }),
-        deviceType: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
-        browser: faker.helpers.arrayElement(['Chrome', 'Firefox', 'Safari', 'Edge']),
-        os: faker.helpers.arrayElement(['Windows', 'macOS', 'Linux', 'iOS', 'Android']),
+      firstName: faker.person.firstName(),
+      lastName: faker.person.lastName(),
+      email: faker.internet.email({ firstName: faker.person.firstName(), lastName: faker.person.lastName(), provider: 'mediarithmics.com' }),
+      address: {
+        street: faker.location.streetAddress(),
+        city: faker.location.city(),
+        state: faker.location.state(),
+        zipCode: faker.location.zipCode(),
+        country
       },
-      timestamp: faker.date.recent({ days: 30 }),
-      country
+      createdAt: faker.date.past(),
+      profileType: 'anonymous',
+      cookieId: faker.string.uuid(),
+      maidId: faker.datatype.boolean({ probability: 0.3 }) ? faker.string.uuid() : undefined
     };
-    events.push(event);
+    
+    const anonymousEvents = generateUserEventSequence(anonymousProfile, country);
+    events.push(...anonymousEvents);
   }
   
   return events;

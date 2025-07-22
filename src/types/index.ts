@@ -65,6 +65,31 @@ export interface Product {
 }
 
 /**
+ * Event Types
+ * 
+ * Defines all supported event types for user interactions and tracking.
+ * These event types cover various user behaviors across web, mobile, and
+ * marketing channels.
+ */
+export type EventType = 
+  | 'page_view'
+  | 'search'
+  | 'article_view'
+  | 'video_view'
+  | 'audio_listen'
+  | 'ad_view'
+  | 'ad_click'
+  | 'email_open'
+  | 'email_click'
+  | 'add_itemToCart'
+  | 'remove_itemFromCart'
+  | 'transaction_complete'
+  | 'checkout'
+  | 'view_cart'
+  | 'richpush_open'
+  | 'richpush_click';
+
+/**
  * MixedDataItem Interface
  * 
  * Represents a generic data item that can contain different types of
