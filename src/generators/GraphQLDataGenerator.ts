@@ -16,11 +16,18 @@ import {
 import { parseGraphQLSchema } from '../utils/graphqlParser';
 
 /**
- * GraphQL-based Data Generator
+ * Enhanced GraphQL-based Data Generator
  * 
- * This class generates realistic data based on GraphQL schema definitions.
- * It automatically maps GraphQL fields to appropriate data generation strategies
- * and creates data that matches the CDP's expected data model.
+ * This class generates realistic data based on GraphQL schema definitions with sophisticated
+ * handling of complex field types. It automatically maps GraphQL fields to appropriate data 
+ * generation strategies and creates data that matches the CDP's expected data model.
+ * 
+ * Key Features:
+ * - Recursive custom object generation based on schema definitions
+ * - Smart array generation for complex types with variable lengths
+ * - Placeholder objects instead of null values for unsupported types
+ * - Sophisticated warning system for graceful degradation
+ * - Type-safe data creation with full TypeScript support
  */
 export class GraphQLDataGenerator {
   private schema: GraphQLSchema | null = null;
@@ -459,10 +466,13 @@ export class GraphQLDataGenerator {
   }
 
   /**
-   * Generates an array value for a field
+   * Generates an array value for a field with smart type handling
+   * 
+   * Creates arrays of appropriate types with realistic lengths (1-3 elements).
+   * Supports arrays of scalars, custom objects, and nested types.
    * 
    * @param field - GraphQL field definition
-   * @returns any[] - Generated array value
+   * @returns any[] - Generated array value with appropriate element types
    */
   private generateArrayValue(field: GraphQLField): any[] {
     const baseType = this.getBaseType(field.type);
@@ -487,10 +497,13 @@ export class GraphQLDataGenerator {
   }
 
   /**
-   * Generates a custom object value for a field
+   * Generates a custom object value for a field with recursive nesting
+   * 
+   * Recursively generates nested objects based on GraphQL schema definitions.
+   * Creates complete object structures with all fields populated.
    * 
    * @param field - GraphQL field definition
-   * @returns any - Generated custom object value
+   * @returns any - Generated custom object value with nested structure
    */
   private generateCustomObjectValue(field: GraphQLField): any {
     if (!this.schema) {
@@ -514,10 +527,13 @@ export class GraphQLDataGenerator {
   }
 
   /**
-   * Generates a placeholder object for unknown field types
+   * Generates a placeholder object for unknown field types instead of null
+   * 
+   * Creates structured placeholder objects with metadata instead of returning null
+   * for unsupported field types. Includes type information, field name, and timestamp.
    * 
    * @param field - GraphQL field definition
-   * @returns any - Generated placeholder object
+   * @returns any - Generated placeholder object with metadata
    */
   private generatePlaceholderObject(field: GraphQLField): any {
     const baseType = this.getBaseType(field.type);

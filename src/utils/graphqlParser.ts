@@ -1,8 +1,14 @@
 /**
- * GraphQL Schema Parser for Demo Data Generator
+ * Enhanced GraphQL Schema Parser for Demo Data Generator
  * 
  * This module parses GraphQL schema files and extracts field definitions
  * to automatically generate appropriate data fields for the CDP.
+ * 
+ * Enhanced Features:
+ * - Improved array type detection for complex types like [UserEvent!]!
+ * - Better field parsing with multiline support
+ * - Robust enum value extraction
+ * - Enhanced error handling and validation
  */
 
 import * as fs from 'fs';

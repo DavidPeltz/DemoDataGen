@@ -229,6 +229,40 @@ The system automatically maps GraphQL fields to data generation strategies:
 - **Enum fields**: Generate valid enum values from the schema
 - **Custom fields**: Fall back to appropriate data types
 
+#### Enhanced Field Handling
+
+The system now provides sophisticated handling for unsupported or complex field types:
+
+##### **Custom Object Generation**
+- **Recursive generation**: Automatically generates nested objects based on GraphQL schema
+- **Schema-aware**: Uses actual type definitions to create proper object structures
+- **Example**: `UserProfile` objects are generated with all their fields
+
+##### **Array Generation**
+- **Smart arrays**: Generates arrays of appropriate types (String, Int, Float, Boolean, ID)
+- **Variable lengths**: Creates realistic array sizes (1-3 elements)
+- **Complex support**: Handles arrays of custom objects and nested types
+- **Example**: `tags: [String]` generates `["tag1", "tag2", "tag3"]`
+
+##### **Placeholder Objects**
+- **No more nulls**: Instead of `null`, generates structured placeholder objects
+- **Rich metadata**: Includes type information, field name, and generation timestamp
+- **Example**:
+  ```json
+  {
+    "_type": "CustomType",
+    "_placeholder": true,
+    "_fieldName": "unknownField",
+    "_generatedAt": "2024-01-15T10:30:00.000Z",
+    "value": "placeholder_value"
+  }
+  ```
+
+##### **Warning System**
+- **Reduced verbosity**: Only logs warnings for truly problematic cases
+- **Meaningful feedback**: Provides context about unknown field types
+- **Graceful degradation**: System continues working even with unsupported fields
+
 #### Supported GraphQL Features
 
 - ✅ Object types
@@ -238,6 +272,10 @@ The system automatically maps GraphQL fields to data generation strategies:
 - ✅ Non-null fields
 - ✅ Nested types
 - ✅ Custom directives (basic support)
+- ✅ **Complex nested objects**: Recursively generate object structures
+- ✅ **Array types**: Generate arrays of any supported type
+- ✅ **Custom types**: Graceful handling of unknown types with placeholders
+- ✅ **Warning system**: Informative feedback for unsupported fields
 
 ### Example Schema
 
@@ -247,9 +285,57 @@ type User {
   email: String!
   firstName: String!
   lastName: String!
-  eventType: EventType!
+  phone: String
   createdAt: DateTime!
   isActive: Boolean!
+  
+  # Custom objects
+  profile: UserProfile
+  preferences: UserPreferences
+  
+  # Array fields
+  tags: [String]
+  scores: [Int]
+  addresses: [Address]
+  
+  # Complex nested objects
+  metadata: JSON
+  settings: UserSettings
+}
+
+type UserProfile {
+  bio: String
+  avatar: String
+  website: String
+  socialLinks: [String]
+}
+
+type UserPreferences {
+  theme: String
+  language: String
+  notifications: Boolean
+  privacy: PrivacySettings
+}
+
+type PrivacySettings {
+  publicProfile: Boolean
+  showEmail: Boolean
+  allowTracking: Boolean
+}
+
+type Address {
+  street: String
+  city: String
+  state: String
+  zipCode: String
+  country: String
+}
+
+type UserSettings {
+  displayName: String
+  timezone: String
+  currency: String
+  preferences: [String]
 }
 
 enum EventType {
@@ -260,7 +346,12 @@ enum EventType {
 }
 ```
 
-Generated data will automatically use valid enum values and appropriate data types.
+Generated data will automatically use valid enum values and appropriate data types. The system will:
+
+- **Generate nested objects**: `UserProfile`, `UserPreferences`, `PrivacySettings`, etc.
+- **Create arrays**: `tags`, `scores`, `addresses`, `socialLinks`, etc.
+- **Handle complex types**: `metadata` as JSON, `settings` as nested objects
+- **Use placeholders**: For any unsupported custom types
 
 ## API Reference
 

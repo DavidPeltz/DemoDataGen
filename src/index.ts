@@ -369,11 +369,17 @@ function saveDataToFiles(userProfiles: UserProfile[], events: UserEvent[], count
  * This function orchestrates the entire data generation process:
  * 1. Loads configuration from config.json file
  * 2. Validates configuration settings
- * 3. Initializes data generators (including GraphQL if enabled)
+ * 3. Initializes data generators (including enhanced GraphQL if enabled)
  * 4. Generates users, products, and mixed data
  * 5. Creates user profiles with tracking information
  * 6. Generates user events with proper linking
  * 7. Saves all data to files
+ * 
+ * Enhanced GraphQL features include:
+ * - Custom object generation with recursive nesting
+ * - Smart array generation for complex types
+ * - Placeholder objects instead of null values
+ * - Sophisticated warning system for unsupported fields
  * 
  * @returns Promise<void>
  */

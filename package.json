@@ -1,7 +1,7 @@
 {
   "name": "demo-data-gen",
   "version": "1.0.0",
-  "description": "A TypeScript program for generating demo data with GraphQL schema support",
+  "description": "A TypeScript program for generating demo data with enhanced GraphQL schema support including custom objects, arrays, and sophisticated field handling",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
