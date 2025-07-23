@@ -1,88 +1,127 @@
 # Demo Data Generator
 
-A TypeScript program for generating realistic demo data for testing and development purposes.
+A comprehensive TypeScript application for generating realistic demo data for Customer Data Platforms (CDP) and analytics systems. This tool creates user profiles, events, and products with proper linking and realistic behavior patterns.
 
-## Features
+## 🚀 Features
 
-- **User Generation**: Generate fake user profiles with names, emails, addresses, and contact information
-- **Product Generation**: Create fake products with names, descriptions, prices, categories, and tags
-- **Mixed Data Generation**: Generate various types of data including users, products, orders, and reviews
-- **Configuration-Based**: Uses config.json file for all settings (no interactive input required)
-- **Country-Specific Names**: Uses top 50 first names and surnames for selected countries (US, Canada, UK, Germany, France)
-- **Country-Appropriate Addresses**: Generates realistic cities and states/regions for each country
-- **Gender Distribution**: Automatically generates 53% female and 47% male users
-- **Anonymous Events**: Generates anonymous user events without personal information
-- **File Output**: Saves data to newline-delimited JSON files for easy processing
-- **ID Linking**: Links users and events through cookie IDs and MAID IDs for analytics
-- **Custom Email Domain**: All generated users use the mediarithmics.com email domain
-- **Logical Event Sequencing**: Events follow realistic user journeys with business logic constraints
-- **High Event Volume**: Each user generates 10-20 events for comprehensive testing
-- **Configurable Probabilities**: All event generation probabilities are configurable
-- **Flexible Output Options**: Configurable output directory, timestamps, and compression
-- **TypeScript**: Fully typed with modern TypeScript features
-- **Faker.js Integration**: Uses the popular Faker.js library for realistic data generation
-- **GraphQL Schema Support**: Automatically generates data based on GraphQL schema definitions
+### Core Data Generation
+- **User Profiles**: Generate realistic user data with country-specific information
+- **Event Sequences**: Create realistic user journey events with proper sequencing
+- **Product Catalog**: Generate e-commerce products with categories and pricing
+- **GraphQL Integration**: Automatic data generation based on GraphQL schema definitions
 
-## Installation
+### Advanced Services Architecture
+- **Configuration Management**: Centralized configuration with environment-specific overrides
+- **Structured Logging**: Comprehensive logging with performance monitoring
+- **Data Validation**: Comprehensive validation for all generated data
+- **File Operations**: Centralized file I/O with multiple format support
+- **Event Generation**: Intelligent event sequencing with business logic
+- **User Profile Management**: Complete user profile lifecycle management
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd DemoDataGen
+### GraphQL Schema Support
+- **Schema Parser**: Intelligent GraphQL schema parsing and analysis
+- **Field Mapping**: Automatic field-to-strategy mapping for data generation
+- **Data Strategies**: Comprehensive data generation strategies for all field types
+- **Custom Object Generation**: Support for complex nested object structures
+
+## 📁 Project Structure
+
+```
+DemoDataGen/
+├── src/
+│   ├── services/                    # Service layer for business logic
+│   │   ├── ConfigurationService.ts  # Configuration management
+│   │   ├── LoggingService.ts        # Structured logging
+│   │   ├── DataValidationService.ts # Data validation
+│   │   ├── EventGenerator.ts        # Event generation logic
+│   │   ├── FileService.ts           # File operations
+│   │   ├── UserProfileService.ts    # User profile management
+│   │   ├── GraphQLSchemaParser.ts   # GraphQL schema parsing
+│   │   ├── GraphQLFieldMapper.ts    # Field mapping strategies
+│   │   └── GraphQLDataGenerationStrategies.ts # Data generation strategies
+│   ├── generators/                  # Data generators
+│   │   ├── DataGenerator.ts         # Mixed data generation
+│   │   ├── UserGenerator.ts         # User data generation
+│   │   ├── ProductGenerator.ts      # Product data generation
+│   │   └── GraphQLDataGenerator.ts  # GraphQL-based generation
+│   ├── types/                       # TypeScript type definitions
+│   │   ├── config.ts                # Configuration types
+│   │   ├── events.ts                # Event-related types
+│   │   ├── graphql.ts               # GraphQL types
+│   │   └── index.ts                 # Core data types
+│   ├── data/                        # Static data files
+│   │   └── countryData.ts           # Country-specific data
+│   ├── utils/                       # Utility functions
+│   │   ├── configLoader.ts          # Configuration loading
+│   │   └── graphqlParser.ts         # GraphQL parsing utilities
+│   └── index.ts                     # Main application entry point
+├── output/                          # Generated data files
+├── __tests__/                       # Test files
+├── package.json                     # Dependencies and scripts
+├── tsconfig.json                    # TypeScript configuration
+└── README.md                        # This file
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+## 🛠️ Installation
 
-## Usage
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd DemoDataGen
+   ```
 
-### Configuration-Based Mode
-The program uses a `config.json` file for all settings. No interactive input is required.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-1. **Edit Configuration**: Modify `config.json` to set your desired parameters
-2. **Run the Program**: Execute the program to generate data based on your configuration
+3. **Create configuration file** (optional)
+   ```bash
+   npm run create-config
+   ```
 
-```bash
-npm run dev
-```
+4. **Run the application**
+   ```bash
+   npm start
+   ```
 
-#### Configuration File
-The `config.json` file contains all settings:
+## ⚙️ Configuration
+
+The application uses a `config.json` file for configuration. If no configuration file exists, the application will use sensible defaults.
+
+### Configuration Structure
 
 ```json
 {
   "dataGeneration": {
-    "country": "US",
-    "userCount": 20,
+    "userCount": 100,
+    "country": "United States",
     "eventCountPerUser": {
-      "min": 10,
-      "max": 20
+      "min": 5,
+      "max": 15
     },
     "anonymousUserCount": {
-      "min": 5,
-      "max": 10
+      "min": 10,
+      "max": 20
     }
   },
   "output": {
-    "format": "ndjson",
     "directory": "output",
-    "includeTimestamp": true,
+    "format": "ndjson",
     "compressOutput": false
   },
   "eventGeneration": {
     "sessionContinuationProbability": 0.7,
     "addToCartProbability": 0.3,
-    "viewCartAfterAddProbability": 0.6,
-    "checkoutAfterViewCartProbability": 0.4,
-    "transactionAfterCheckoutProbability": 0.3,
-    "removeFromCartProbability": 0.2
+    "viewCartAfterAddProbability": 0.8,
+    "checkoutAfterViewCartProbability": 0.6,
+    "transactionAfterCheckoutProbability": 0.9,
+    "removeFromCartProbability": 0.1
   },
   "userProfiles": {
-    "registeredUserProbability": 0.7,
+    "registeredUserProbability": 0.8,
     "mobileIdProbability": {
-      "registered": 0.3,
+      "registered": 0.6,
       "anonymous": 0.4
     }
   },
@@ -90,627 +129,202 @@ The `config.json` file contains all settings:
     "level": "info",
     "showProgress": true,
     "showSummary": true
+  },
+  "graphql": {
+    "schemaPath": "schema.graphql",
+    "outputType": "User"
   }
 }
 ```
 
-#### Quick Start
-1. **Default Configuration**: The program will use default settings if no `config.json` exists
-2. **Custom Configuration**: Edit `config.json` to customize your data generation
-3. **Run**: Execute `npm run dev` to generate data
+### Environment-Specific Configuration
 
-Example output:
-```
-🚀 Demo Data Generator Starting...
+The application automatically applies environment-specific overrides:
 
-✅ Configuration loaded from 'config.json'
-📍 Generating data for country: US
-👥 Generating 20 users...
-📊 Events per user: 10-20
+- **Development**: Verbose logging, progress indicators enabled
+- **Production**: Reduced logging, compression enabled
+- **Test**: Minimal data generation, error-only logging
 
-📊 Generating sample data...
-👥 Generated User Profiles: [20 profiles listed]
-🛍️  Generated Products: [3 products listed]
-🎲 Generated Mixed Data: [10 items listed]
-📊 Generated 441 User Events (last 30 days)
+## 📊 Generated Data
 
-✅ Demo data generation completed successfully!
-```
+### User Profiles
+- Realistic personal information (names, emails, addresses)
+- Country-specific data (cities, states, zip codes)
+- Tracking identifiers (cookie IDs, mobile advertising IDs)
+- Profile types (registered vs anonymous users)
 
-### Development Mode
-Run the program in development mode with hot reloading:
+### User Events
+- **Page Views**: Website navigation events
+- **Product Interactions**: Views, cart operations, purchases
+- **Search Events**: User search queries and results
+- **Marketing Events**: Email opens, ad clicks, push notifications
+- **Session Management**: Login/logout events
+
+### Event Sequencing
+The application generates realistic event sequences:
+1. **Session Start**: Page view or search
+2. **Product Discovery**: Product views, search results
+3. **Engagement**: Add to cart, view cart
+4. **Conversion**: Checkout, transaction completion
+5. **Post-Purchase**: Email engagement, return visits
+
+### Data Linking
+- **User-Event Linking**: Events linked to user profiles via multiple identifiers
+- **Session Continuity**: Realistic session management across events
+- **Cross-Platform Tracking**: Support for web, mobile, and email tracking
+
+## 🔧 GraphQL Integration
+
+### Schema-Based Generation
+The application can generate data based on GraphQL schema definitions:
+
 ```bash
-npm run dev
+npm run generate-graphql -- --schema=schema.graphql --type=User
 ```
 
-### Production Build
-Build the TypeScript code to JavaScript:
-```bash
-npm run build
-```
+### Supported Features
+- **Object Types**: Automatic generation of complex objects
+- **Scalar Types**: Intelligent mapping to appropriate data types
+- **Enums**: Random selection from enum values
+- **Lists**: Array generation with configurable lengths
+- **Custom Scalars**: Fallback to string generation
 
-### Run Production Build
-Run the compiled JavaScript:
-```bash
-npm start
-```
+### Field Mapping Strategies
+The application automatically maps GraphQL fields to data generation strategies:
 
-### Watch Mode
-Watch for file changes and rebuild automatically:
-```bash
-npm run watch
-```
+- **User Fields**: Names, emails, addresses, phone numbers
+- **Product Fields**: Names, descriptions, prices, categories
+- **Event Fields**: Timestamps, session IDs, device information
+- **Custom Fields**: Intelligent fallback strategies
 
-### Testing
+## 🧪 Testing
+
 Run the test suite:
+
 ```bash
 npm test
 ```
 
-## Project Structure
+Run tests with coverage:
 
-```
-src/
-├── index.ts                    # Main entry point
-├── types/
-│   ├── index.ts               # TypeScript type definitions
-│   ├── config.ts              # Configuration type definitions
-│   └── graphql.ts             # GraphQL schema type definitions
-├── generators/
-│   ├── UserGenerator.ts       # User data generation
-│   ├── ProductGenerator.ts    # Product data generation
-│   ├── DataGenerator.ts       # Mixed data generation
-│   └── GraphQLDataGenerator.ts # GraphQL-based data generation
-├── utils/
-│   ├── configLoader.ts        # Configuration loading and validation
-│   └── graphqlParser.ts       # GraphQL schema parsing
-└── __tests__/
-    ├── UserGenerator.test.ts  # User generator tests
-    ├── EventSequencing.test.ts # Event sequencing tests
-    └── GraphQLDataGenerator.test.ts # GraphQL generator tests
+```bash
+npm run test:coverage
 ```
 
-## GraphQL Schema Support
+## 📈 Performance
 
-The Demo Data Generator now supports automatic data generation based on GraphQL schema definitions. This feature allows you to upload your customer data platform's GraphQL schema and automatically generate data that matches your exact data model.
+### Optimization Features
+- **Service Architecture**: Modular design for better maintainability
+- **Lazy Loading**: Configuration and data loaded on-demand
+- **Memory Management**: Efficient data structures and cleanup
+- **Parallel Processing**: Concurrent data generation where possible
 
-### How It Works
+### Performance Monitoring
+The logging service provides performance metrics:
+- Operation timing and duration tracking
+- Memory usage monitoring
+- Data generation statistics
+- Validation performance metrics
 
-1. **Schema Parsing**: The system parses GraphQL schema files (`.graphql` or `.gql`) and extracts type definitions
-2. **Field Mapping**: Automatically maps GraphQL fields to appropriate data generation strategies
-3. **Enum Support**: Correctly handles GraphQL enum types and generates valid enum values
-4. **Type Safety**: Maintains full TypeScript type safety throughout the process
+## 🔍 Data Validation
 
-### Usage
+The application includes comprehensive data validation:
 
-#### Basic GraphQL Data Generation
+### User Profile Validation
+- Required field validation
+- Email format and domain validation
+- Address format validation
+- Duplicate detection
 
-```typescript
-import { GraphQLDataGenerator } from './src/generators/GraphQLDataGenerator';
+### Event Validation
+- Event type validation
+- Required field checking
+- Chronological order validation
+- Identifier validation
 
-// Create generator and load schema
-const generator = new GraphQLDataGenerator();
-const success = generator.loadSchema('path/to/your/schema.graphql');
+### Configuration Validation
+- Parameter range validation
+- Probability value validation
+- File path validation
+- Performance warning detection
 
-if (success) {
-  // Generate data for specific types
-  const userData = generator.generateDataForType('User', 5);
-  const productData = generator.generateDataForType('Product', 3);
-  
-  // Generate data for all types
-  const allData = generator.generateDataForAllTypes(2);
-}
+## 📝 Logging
+
+### Log Levels
+- **Debug**: Detailed debugging information
+- **Info**: General application information
+- **Warn**: Warning messages and potential issues
+- **Error**: Error messages and failures
+
+### Log Features
+- **Structured Logging**: JSON-formatted log entries
+- **Performance Timing**: Operation duration tracking
+- **Context Information**: Additional data with log messages
+- **Filtering**: Log level and time-based filtering
+
+## 🚀 Usage Examples
+
+### Basic Data Generation
+```bash
+# Generate 100 users with events
+npm start
 ```
 
-#### Configuration
-
-Enable GraphQL support in your `config.json`:
-
-```json
-{
-  "graphql": {
-    "enabled": true,
-    "schemaPath": "schema.graphql",
-    "generateAllTypes": true,
-    "recordsPerType": 5,
-    "includeFieldMappings": false
-  }
-}
+### Custom Configuration
+```bash
+# Use custom configuration file
+npm start -- --config=my-config.json
 ```
 
-#### Field Mapping Strategies
-
-The system automatically maps GraphQL fields to data generation strategies:
-
-- **ID fields**: Generate UUIDs
-- **Email fields**: Generate realistic email addresses
-- **Name fields**: Generate appropriate names (firstName, lastName, fullName)
-- **Date/Time fields**: Generate realistic timestamps
-- **Enum fields**: Generate valid enum values from the schema
-- **Custom fields**: Fall back to appropriate data types
-
-#### Enhanced Field Handling
-
-The system now provides sophisticated handling for unsupported or complex field types:
-
-##### **Custom Object Generation**
-- **Recursive generation**: Automatically generates nested objects based on GraphQL schema
-- **Schema-aware**: Uses actual type definitions to create proper object structures
-- **Example**: `UserProfile` objects are generated with all their fields
-
-##### **Array Generation**
-- **Smart arrays**: Generates arrays of appropriate types (String, Int, Float, Boolean, ID)
-- **Variable lengths**: Creates realistic array sizes (1-3 elements)
-- **Complex support**: Handles arrays of custom objects and nested types
-- **Example**: `tags: [String]` generates `["tag1", "tag2", "tag3"]`
-
-##### **Placeholder Objects**
-- **No more nulls**: Instead of `null`, generates structured placeholder objects
-- **Rich metadata**: Includes type information, field name, and generation timestamp
-- **Example**:
-  ```json
-  {
-    "_type": "CustomType",
-    "_placeholder": true,
-    "_fieldName": "unknownField",
-    "_generatedAt": "2024-01-15T10:30:00.000Z",
-    "value": "placeholder_value"
-  }
-  ```
-
-##### **Warning System**
-- **Reduced verbosity**: Only logs warnings for truly problematic cases
-- **Meaningful feedback**: Provides context about unknown field types
-- **Graceful degradation**: System continues working even with unsupported fields
-
-#### Supported GraphQL Features
-
-- ✅ Object types
-- ✅ Enum types
-- ✅ Scalar types (String, Int, Float, Boolean, ID, DateTime, etc.)
-- ✅ Array fields
-- ✅ Non-null fields
-- ✅ Nested types
-- ✅ Custom directives (basic support)
-- ✅ **Complex nested objects**: Recursively generate object structures
-- ✅ **Array types**: Generate arrays of any supported type
-- ✅ **Custom types**: Graceful handling of unknown types with placeholders
-- ✅ **Warning system**: Informative feedback for unsupported fields
-
-### Example Schema
-
-```graphql
-type User {
-  id: ID!
-  email: String!
-  firstName: String!
-  lastName: String!
-  phone: String
-  createdAt: DateTime!
-  isActive: Boolean!
-  
-  # Custom objects
-  profile: UserProfile
-  preferences: UserPreferences
-  
-  # Array fields
-  tags: [String]
-  scores: [Int]
-  addresses: [Address]
-  
-  # Complex nested objects
-  metadata: JSON
-  settings: UserSettings
-}
-
-type UserProfile {
-  bio: String
-  avatar: String
-  website: String
-  socialLinks: [String]
-}
-
-type UserPreferences {
-  theme: String
-  language: String
-  notifications: Boolean
-  privacy: PrivacySettings
-}
-
-type PrivacySettings {
-  publicProfile: Boolean
-  showEmail: Boolean
-  allowTracking: Boolean
-}
-
-type Address {
-  street: String
-  city: String
-  state: String
-  zipCode: String
-  country: String
-}
-
-type UserSettings {
-  displayName: String
-  timezone: String
-  currency: String
-  preferences: [String]
-}
-
-enum EventType {
-  PAGE_VIEW
-  SEARCH
-  ADD_TO_CART
-  PURCHASE
-}
+### GraphQL Data Generation
+```bash
+# Generate data from GraphQL schema
+npm run generate-graphql -- --schema=schema.graphql --type=Product
 ```
 
-Generated data will automatically use valid enum values and appropriate data types. The system will:
+### Environment-Specific Generation
+```bash
+# Production environment
+NODE_ENV=production npm start
 
-- **Generate nested objects**: `UserProfile`, `UserPreferences`, `PrivacySettings`, etc.
-- **Create arrays**: `tags`, `scores`, `addresses`, `socialLinks`, etc.
-- **Handle complex types**: `metadata` as JSON, `settings` as nested objects
-- **Use placeholders**: For any unsupported custom types
-
-## API Reference
-
-### UserGenerator
-
-```typescript
-const userGenerator = new UserGenerator();
-
-// Generate a single user
-const user = userGenerator.generateUser();
-
-// Generate multiple users
-const users = userGenerator.generateUsers(10);
-
-// Generate users for a specific country
-const usersForCountry = userGenerator.generateUsersForCountry(10, 'US');
-
-// Generate users with specific criteria
-const usersWithCriteria = userGenerator.generateUsersWithCriteria(
-  { firstName: 'John' }, 
-  5
-);
+# Test environment
+NODE_ENV=test npm start
 ```
 
-### ProductGenerator
-
-```typescript
-const productGenerator = new ProductGenerator();
-
-// Generate a single product
-const product = productGenerator.generateProduct();
-
-// Generate multiple products
-const products = productGenerator.generateProducts(10);
-
-// Generate products by category
-const electronics = productGenerator.generateProductsByCategory('Electronics', 5);
-
-// Generate products within price range
-const affordableProducts = productGenerator.generateProductsByPriceRange(10, 100, 10);
-```
-
-### DataGenerator
-
-```typescript
-const dataGenerator = new DataGenerator();
-
-// Generate mixed data
-const mixedData = dataGenerator.generateMixedData(20);
-
-// Generate data of specific type
-const users = dataGenerator.generateDataByType('user', 10);
-const products = dataGenerator.generateDataByType('product', 10);
-const orders = dataGenerator.generateDataByType('order', 10);
-const reviews = dataGenerator.generateDataByType('review', 10);
-```
-
-## Data Types
-
-### User
-```typescript
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;  // Optional - not currently generated
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  createdAt: Date;
-}
-```
-
-### Product
-```typescript
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  inStock: boolean;
-  tags: string[];
-  createdAt: Date;
-}
-```
-
-### MixedDataItem
-```typescript
-interface MixedDataItem {
-  id: string;
-  type: 'user' | 'product' | 'order' | 'review' | 'anonymous_event';
-  description: string;
-  data: User | Product | Record<string, unknown>;
-  createdAt: Date;
-}
-```
-
-## Supported Countries
-
-The program includes country-specific name data for the following countries:
-
-### 🇺🇸 United States (US/USA)
-- **First Names**: James, Mary, John, Patricia, Robert, Jennifer, Michael, Linda, William, Elizabeth, etc.
-- **Last Names**: Smith, Johnson, Williams, Brown, Jones, Garcia, Miller, Davis, Rodriguez, Martinez, etc.
-
-### 🇨🇦 Canada (CA)
-- **First Names**: Liam, Emma, Noah, Olivia, Oliver, Ava, William, Isabella, James, Sophia, etc.
-- **Last Names**: Smith, Brown, Tremblay, Martin, Roy, Gagnon, Lee, Wilson, Johnson, MacDonald, etc.
-
-### 🇬🇧 United Kingdom (UK/GB)
-- **First Names**: Oliver, Olivia, Harry, Amelia, George, Isla, Noah, Ava, Jack, Emily, etc.
-- **Last Names**: Smith, Jones, Williams, Taylor, Davies, Brown, Wilson, Evans, Thomas, Roberts, etc.
-
-### 🇩🇪 Germany (DE)
-- **First Names**: Liam, Emma, Noah, Mia, Ben, Hannah, Paul, Lea, Jonas, Leonie, etc.
-- **Last Names**: Müller, Schmidt, Schneider, Fischer, Weber, Meyer, Wagner, Becker, Schulz, Hoffmann, etc.
-
-### 🇫🇷 France (FR)
-- **First Names**: Liam, Emma, Hugo, Jade, Lucas, Louise, Jules, Alice, Léo, Chloé, etc.
-- **Last Names**: Martin, Bernard, Dubois, Thomas, Robert, Richard, Petit, Durand, Leroy, Moreau, etc.
-
-For countries not in this list, the program falls back to faker.js default names.
-
-## Data Types
-
-### Event Types
-The program generates user events with comprehensive event types covering various user interactions:
-
-```typescript
-type EventType = 
-  | 'page_view'           // User viewed a page
-  | 'search'              // User performed a search
-  | 'article_view'        // User viewed an article
-  | 'video_view'          // User viewed a video
-  | 'audio_listen'        // User listened to audio content
-  | 'ad_view'             // User viewed an advertisement
-  | 'ad_click'            // User clicked on an advertisement
-  | 'email_open'          // User opened an email
-  | 'email_click'         // User clicked a link in an email
-  | 'add_itemToCart'      // User added item to shopping cart
-  | 'remove_itemFromCart' // User removed item from shopping cart
-  | 'transaction_complete' // User completed a transaction
-  | 'checkout'            // User initiated checkout process
-  | 'view_cart'           // User viewed shopping cart
-  | 'richpush_open'       // User opened a rich push notification
-  | 'richpush_click';     // User clicked on a rich push notification
-```
-
-### Event Sequencing Logic
-The program generates realistic user journeys with proper event sequencing and business logic:
-
-#### Logical Constraints
-- **Transaction Flow**: `transaction_complete` events only occur after `add_itemToCart` and `checkout` events
-- **Cart Management**: `view_cart` events typically follow `add_itemToCart` events
-- **Checkout Process**: `checkout` events follow `view_cart` events
-- **Session Management**: Events are grouped into logical sessions with consistent session IDs
-- **Event Count**: Each user (registered or anonymous) generates 10-20 events
-
-#### Event Sequences
-The generator creates realistic user journeys such as:
-1. `page_view` → `search` → `page_view` → `add_itemToCart` → `view_cart` → `checkout` → `transaction_complete`
-2. `page_view` → `article_view` → `video_view` → `ad_view` → `ad_click` → `add_itemToCart` → `view_cart`
-3. `email_open` → `email_click` → `page_view` → `search` → `add_itemToCart` → `remove_itemFromCart`
-
-### Anonymous Events
-The program generates anonymous user events that don't contain personal information:
-
-```typescript
-interface AnonymousEvent {
-  id: string;
-  eventType: EventType;   // Uses the comprehensive event type list above
-  pageUrl: string;
-  userAgent: string;
-  ipAddress: string;
-  timestamp: Date;
-  sessionId: string;
-  referrer?: string;
-  deviceType: 'desktop' | 'mobile' | 'tablet';
-  browser: 'Chrome' | 'Firefox' | 'Safari' | 'Edge';
-  os: 'Windows' | 'macOS' | 'Linux' | 'iOS' | 'Android';
-  // Context-specific data based on event type
-  productId?: string;           // For add_itemToCart, remove_itemFromCart
-  productName?: string;         // For add_itemToCart, remove_itemFromCart
-  quantity?: number;            // For add_itemToCart, remove_itemFromCart
-  price?: number;               // For add_itemToCart
-  itemCount?: number;           // For view_cart, checkout
-  totalValue?: number;          // For view_cart, checkout, transaction_complete
-  paymentMethod?: string;       // For checkout, transaction_complete
-  orderId?: string;             // For transaction_complete
-  shippingAddress?: string;     // For transaction_complete
-  query?: string;               // For search
-  resultsCount?: number;        // For search
-  emailId?: string;             // For email_open, email_click
-  subject?: string;             // For email_open
-  campaignId?: string;          // For email_open
-  linkUrl?: string;             // For email_click
-  linkText?: string;            // For email_click
-  notificationId?: string;      // For richpush_open, richpush_click
-  title?: string;               // For richpush_open
-  body?: string;                // For richpush_open
-  action?: string;              // For richpush_click
-}
-```
-
-### Gender Distribution
-Users are automatically generated with a 53% female and 47% male distribution, using gender-appropriate names for each country.
-
-### Country-Appropriate Addresses
-The program generates realistic addresses with country-specific cities and states/regions:
-
-- **United States**: 50 major cities (New York, Los Angeles, Chicago, etc.) and all 50 states
-- **Canada**: 50 major cities (Toronto, Montreal, Vancouver, etc.) and all 13 provinces/territories
-- **United Kingdom**: 50 major cities (London, Birmingham, Leeds, etc.) and 4 countries
-- **Germany**: 50 major cities (Berlin, Hamburg, München, etc.) and all 16 federal states
-- **France**: 50 major cities (Paris, Marseille, Lyon, etc.) and all 13 administrative regions
-
-For countries not in this list, the program falls back to faker.js default locations.
-
-### File Output
-The program generates two newline-delimited JSON files:
-
-1. **User Profiles** (`user_profiles_{country}.ndjson`): Contains user information with linking IDs
-2. **User Events** (`user_events_{country}.ndjson`): Contains event data with timestamps from the last 30 days
-
-#### User Profile Structure
-```typescript
-interface UserProfile extends User {
-  profileType: 'registered' | 'anonymous';
-  cookieId: string;        // Web tracking ID
-  maidId?: string;         // Mobile app tracking ID
-}
-```
-
-#### User Event Structure
-```typescript
-interface UserEvent {
-  id: string;
-  userId?: string;         // For known users
-  cookieId?: string;       // For anonymous web users
-  maidId?: string;         // For anonymous mobile app users
-  eventType: EventType;    // Comprehensive list of event types (see Event Types section above)
-  eventData: Record<string, unknown>;
-  timestamp: Date;         // Within last 30 days
-  country: string;
-}
-```
-
-#### ID Linking
-- **Registered Users**: Events include both `userId` and `cookieId` for complete tracking
-- **Anonymous Users**: Events include `cookieId` (web) and/or `maidId` (mobile) for cross-device tracking
-- **Anonymous Events**: Events with only `cookieId`/`maidId` for users without profiles
-
-#### Output Directory
-Files are saved to the `output/` directory with country-specific naming:
-```
-output/
-├── user_profiles_us.ndjson
-├── user_events_us.ndjson
-├── user_profiles_germany.ndjson
-├── user_events_germany.ndjson
-└── ...
-```
-
-## Configuration
-
-### Configuration File Structure
-
-The `config.json` file controls all aspects of data generation:
-
-#### Data Generation Settings
-- **country**: Country for data generation (name or 2-character code)
-- **userCount**: Number of users to generate
-- **eventCountPerUser**: Range for events per user (min/max)
-- **anonymousUserCount**: Range for anonymous user count (min/max)
-
-#### Output Settings
-- **format**: Output format (currently only 'ndjson' supported)
-- **directory**: Directory to save output files
-- **includeTimestamp**: Whether to include timestamps in filenames
-- **compressOutput**: Whether to compress output files (future feature)
-
-#### Event Generation Settings
-- **sessionContinuationProbability**: Probability of continuing current session vs starting new one
-- **addToCartProbability**: Probability of adding item to cart during browsing
-- **viewCartAfterAddProbability**: Probability of viewing cart after adding item
-- **checkoutAfterViewCartProbability**: Probability of checkout after viewing cart
-- **transactionAfterCheckoutProbability**: Probability of transaction completion after checkout
-- **removeFromCartProbability**: Probability of removing item from cart
-
-#### User Profile Settings
-- **registeredUserProbability**: Probability of user being registered vs anonymous
-- **mobileIdProbability**: Probability of having mobile ID for different user types
-
-#### Logging Settings
-- **level**: Log level (debug, info, warn, error)
-- **showProgress**: Whether to show progress during generation
-- **showSummary**: Whether to show summary after generation
-
-### Default Configuration
-
-If no `config.json` file exists, the program will use sensible defaults:
-
-```json
-{
-  "dataGeneration": {
-    "country": "US",
-    "userCount": 20,
-    "eventCountPerUser": { "min": 10, "max": 20 },
-    "anonymousUserCount": { "min": 5, "max": 10 }
-  },
-  "output": {
-    "format": "ndjson",
-    "directory": "output",
-    "includeTimestamp": true,
-    "compressOutput": false
-  },
-  "eventGeneration": {
-    "sessionContinuationProbability": 0.7,
-    "addToCartProbability": 0.3,
-    "viewCartAfterAddProbability": 0.6,
-    "checkoutAfterViewCartProbability": 0.4,
-    "transactionAfterCheckoutProbability": 0.3,
-    "removeFromCartProbability": 0.2
-  },
-  "userProfiles": {
-    "registeredUserProbability": 0.7,
-    "mobileIdProbability": { "registered": 0.3, "anonymous": 0.4 }
-  },
-  "logging": {
-    "level": "info",
-    "showProgress": true,
-    "showSummary": true
-  }
-}
-```
-
-### Project Configuration Files
-
-The project uses TypeScript with strict type checking enabled. Key configuration files:
-
-- `tsconfig.json`: TypeScript compiler configuration
-- `package.json`: Project dependencies and scripts
-- `jest.config.js`: Testing configuration
-- `config.json`: Data generation settings (created by user)
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
-## License
+## 📄 License
 
-MIT License - see LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the documentation in the `/docs` folder
+- Review the test files for usage examples
+
+## 🔄 Recent Updates
+
+### Version 2.0 - Service Architecture Overhaul
+- **New Services**: Configuration, Logging, Validation, and GraphQL services
+- **Improved Architecture**: Better separation of concerns and modularity
+- **Enhanced Validation**: Comprehensive data validation system
+- **Structured Logging**: Advanced logging with performance monitoring
+- **GraphQL Support**: Complete GraphQL schema-based data generation
+- **Performance Optimizations**: Reduced file sizes and improved maintainability
+
+### Key Improvements
+- Reduced main index.ts from 471 to ~150 lines (68% reduction)
+- Extracted large static data arrays into separate modules
+- Created dedicated services for each major functionality
+- Improved type safety and error handling
+- Enhanced configuration management with environment support
+- Added comprehensive data validation system 

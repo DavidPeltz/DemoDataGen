@@ -9,7 +9,11 @@
     "dev": "ts-node src/index.ts",
     "watch": "tsc --watch",
     "clean": "rm -rf dist",
-    "test": "jest"
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "create-config": "ts-node -e \"import('./src/services/ConfigurationService').then(m => new m.ConfigurationService().createSampleConfig())\"",
+    "validate-config": "ts-node -e \"import('./src/services/ConfigurationService').then(m => new m.ConfigurationService().validateConfig())\"",
+    "generate-graphql": "ts-node src/generators/GraphQLDataGenerator.ts"
   },
   "keywords": [
     "typescript",
