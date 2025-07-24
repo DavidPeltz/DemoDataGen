@@ -38,6 +38,13 @@ A comprehensive TypeScript application for generating realistic demo data for Cu
 - **Email Hashing**: SHA256 hashing of email addresses for privacy compliance and data anonymization
 - **GDPR Compliance**: Built-in privacy protection patterns
 
+### CDP Integration Features
+- **Compartment Management**: Configurable compartment IDs for organizational data structure
+- **Channel Tracking**: Event source identification with configurable channel IDs
+- **Probability Distributions**: Weighted assignment of compartments and channels
+- **Realistic CDP Structure**: Mimics real CDP organizational hierarchy
+- **Metadata Integration**: CDP metadata included in all output files
+
 ## 📁 Project Structure
 
 ```
@@ -172,6 +179,7 @@ The application automatically applies environment-specific overrides:
 ### User Profiles
 - Realistic personal information (names, emails, addresses)
 - Email SHA256 hashing for privacy compliance
+- CDP compartment IDs for organizational structure
 - Country-specific data (cities, states, zip codes)
 - Tracking identifiers (cookie IDs, mobile advertising IDs)
 - Profile types (registered vs anonymous users)
@@ -182,6 +190,7 @@ The application automatically applies environment-specific overrides:
 - **Search Events**: User search queries and results
 - **Marketing Events**: Email opens, ad clicks, push notifications
 - **Session Management**: Login/logout events
+- **CDP Channel Tracking**: Event source identification (website, mobile-app, email, social)
 
 ### Event Sequencing
 The application generates realistic event sequences:
@@ -229,6 +238,39 @@ The application automatically maps GraphQL fields to data generation strategies:
 - **Product Fields**: Names, descriptions, prices, categories
 - **Event Fields**: Timestamps, session IDs, device information
 - **Custom Fields**: Intelligent fallback strategies
+
+## 🏢 CDP Integration
+
+### Configuration-Based CDP Structure
+The application supports Customer Data Platform organizational structure through configuration:
+
+```json
+{
+  "cdp": {
+    "compartmentIds": ["compartment-001", "compartment-002", "compartment-003"],
+    "channelIds": ["website", "mobile-app", "email", "social"],
+    "compartmentDistribution": {
+      "compartment-001": 0.4,
+      "compartment-002": 0.35,
+      "compartment-003": 0.25
+    },
+    "channelDistribution": {
+      "website": 0.5,
+      "mobile-app": 0.3,
+      "email": 0.15,
+      "social": 0.05
+    },
+    "includeCDPMetadata": true
+  }
+}
+```
+
+### CDP Features
+- **Compartment Management**: Organizational structure with configurable compartment IDs
+- **Channel Tracking**: Event source identification with realistic channel distribution
+- **Probability Distributions**: Weighted assignment based on business rules
+- **Metadata Integration**: CDP metadata included in all output files
+- **Realistic Structure**: Mimics real CDP organizational hierarchy
 
 ### Anonymous User Support
 
@@ -367,6 +409,13 @@ For support and questions:
 - Review the test files for usage examples
 
 ## 🔄 Recent Updates
+
+### Version 2.4 - CDP Integration & Organizational Structure
+- **Compartment Management**: Configurable compartment IDs for organizational data structure
+- **Channel Tracking**: Event source identification with configurable channel IDs
+- **Probability Distributions**: Weighted assignment of compartments and channels
+- **CDP Metadata Integration**: Compartment and channel IDs included in all output files
+- **Realistic CDP Structure**: Mimics real CDP organizational hierarchy and data flow
 
 ### Version 2.3 - Email Hashing for Privacy Compliance
 - **Email SHA256 Hashing**: All user profiles now include SHA256 hashes of email addresses

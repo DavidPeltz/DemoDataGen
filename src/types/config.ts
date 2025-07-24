@@ -98,7 +98,7 @@ export interface LoggingConfig {
 /**
  * GraphQL Schema Configuration
  * 
- * Configuration for GraphQL schema-based data generation.
+ * Controls GraphQL-based data generation settings.
  */
 export interface GraphQLConfig {
   /** Whether to use GraphQL schema for data generation */
@@ -116,6 +116,30 @@ export interface GraphQLConfig {
 }
 
 /**
+ * CDP Configuration
+ * 
+ * Controls Customer Data Platform specific settings including
+ * compartment IDs for profile data and channel IDs for event data.
+ * This mimics real CDP organizational structure.
+ */
+export interface CDPConfig {
+  /** Compartment IDs for profile data organization */
+  compartmentIds: string[];
+  /** Channel IDs for event data organization (e.g., website, app, email) */
+  channelIds: string[];
+  /** Probability distribution for assigning compartments to users */
+  compartmentDistribution?: {
+    [compartmentId: string]: number; // Probability weight for each compartment
+  };
+  /** Probability distribution for assigning channels to events */
+  channelDistribution?: {
+    [channelId: string]: number; // Probability weight for each channel
+  };
+  /** Whether to include CDP metadata in output files */
+  includeCDPMetadata: boolean;
+}
+
+/**
  * Main Configuration Interface
  * 
  * Combines all configuration sections into a single interface.
@@ -127,6 +151,7 @@ export interface Config {
   userProfiles: UserProfileConfig;
   logging: LoggingConfig;
   graphql: GraphQLConfig;
+  cdp: CDPConfig;
 }
 
 /**
@@ -178,5 +203,21 @@ export const DEFAULT_CONFIG: Config = {
     generateAllTypes: true,
     recordsPerType: 5,
     includeFieldMappings: false
+  },
+  cdp: {
+    compartmentIds: ['compartment-001', 'compartment-002', 'compartment-003'],
+    channelIds: ['website', 'mobile-app', 'email', 'social'],
+    compartmentDistribution: {
+      'compartment-001': 0.4,
+      'compartment-002': 0.35,
+      'compartment-003': 0.25
+    },
+    channelDistribution: {
+      'website': 0.5,
+      'mobile-app': 0.3,
+      'email': 0.15,
+      'social': 0.05
+    },
+    includeCDPMetadata: true
   }
 }; 

@@ -17,11 +17,13 @@ import { User, EventType } from './index';
  * - profileType: Distinguishes between registered and anonymous users
  * - cookieId: Unique identifier for web-based tracking
  * - maidId: Mobile Advertising ID for app-based tracking (optional)
+ * - compartmentId: CDP compartment ID for organizational structure
  */
 export interface UserProfile extends User {
   profileType: 'registered' | 'anonymous';
   cookieId: string;
   maidId?: string | undefined;
+  compartmentId: string;
 }
 
 /**
@@ -37,6 +39,7 @@ export interface UserProfile extends User {
  * - eventData: Detailed event information (URL, user agent, device info, etc.)
  * - timestamp: When the event occurred (within last 30 days)
  * - country: Country where the event occurred
+ * - channelId: CDP channel ID for event source identification
  */
 export interface UserEvent {
   id: string;
@@ -47,6 +50,7 @@ export interface UserEvent {
   eventData: Record<string, unknown>;
   timestamp: Date;
   country: string;
+  channelId: string;
 }
 
 /**

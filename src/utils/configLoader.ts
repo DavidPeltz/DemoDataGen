@@ -94,6 +94,10 @@ function mergeConfig(defaults: Config, userConfig: Partial<Config>): Config {
     graphql: {
       ...defaults.graphql,
       ...userConfig.graphql
+    },
+    cdp: {
+      ...defaults.cdp,
+      ...userConfig.cdp
     }
   };
 }

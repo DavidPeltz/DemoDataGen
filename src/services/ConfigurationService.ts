@@ -155,6 +155,10 @@ export class ConfigurationService {
       graphql: {
         ...defaults.graphql,
         ...userConfig.graphql
+      },
+      cdp: {
+        ...defaults.cdp,
+        ...userConfig.cdp
       }
     };
   }

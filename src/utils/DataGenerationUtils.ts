@@ -36,6 +36,68 @@ export class DataGenerationUtils {
   }
 
   /**
+   * Selects a compartment ID based on probability distribution
+   * 
+   * @param compartmentIds - Array of available compartment IDs
+   * @param distribution - Probability distribution for each compartment
+   * @returns string - Selected compartment ID
+   */
+  static selectCompartmentId(
+    compartmentIds: string[], 
+    distribution?: { [key: string]: number }
+  ): string {
+    if (!distribution || Object.keys(distribution).length === 0) {
+      // If no distribution provided, use equal probability
+      return this.generateRandomElement(compartmentIds);
+    }
+
+    // Use weighted random selection based on distribution
+    const random = Math.random();
+    let cumulativeProbability = 0;
+    
+    for (const [compartmentId, probability] of Object.entries(distribution)) {
+      cumulativeProbability += probability;
+      if (random <= cumulativeProbability) {
+        return compartmentId;
+      }
+    }
+    
+    // Fallback to first compartment if distribution doesn't sum to 1
+    return compartmentIds[0] || 'default-compartment';
+  }
+
+  /**
+   * Selects a channel ID based on probability distribution
+   * 
+   * @param channelIds - Array of available channel IDs
+   * @param distribution - Probability distribution for each channel
+   * @returns string - Selected channel ID
+   */
+  static selectChannelId(
+    channelIds: string[], 
+    distribution?: { [key: string]: number }
+  ): string {
+    if (!distribution || Object.keys(distribution).length === 0) {
+      // If no distribution provided, use equal probability
+      return this.generateRandomElement(channelIds);
+    }
+
+    // Use weighted random selection based on distribution
+    const random = Math.random();
+    let cumulativeProbability = 0;
+    
+    for (const [channelId, probability] of Object.entries(distribution)) {
+      cumulativeProbability += probability;
+      if (random <= cumulativeProbability) {
+        return channelId;
+      }
+    }
+    
+    // Fallback to first channel if distribution doesn't sum to 1
+    return channelIds[0] || 'default-channel';
+  }
+
+  /**
    * Generates a unique identifier
    * 
    * @returns string - Unique UUID

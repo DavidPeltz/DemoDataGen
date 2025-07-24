@@ -61,6 +61,11 @@ export class EventGenerator {
         this.config.userProfiles.mobileIdProbability.anonymous
       );
       
+      const compartmentId = DataGenerationUtils.selectCompartmentId(
+        this.config.cdp.compartmentIds,
+        this.config.cdp.compartmentDistribution
+      );
+
       const anonymousProfile: UserProfile = {
         id: DataGenerationUtils.generateId(),
         firstName,
@@ -71,7 +76,8 @@ export class EventGenerator {
         createdAt: DataGenerationUtils.generatePastDate(),
         profileType: 'anonymous',
         cookieId,
-        maidId
+        maidId,
+        compartmentId
       };
       
       const anonymousEvents = this.generateUserEventSequence(anonymousProfile, country);
@@ -116,6 +122,12 @@ export class EventGenerator {
       // Update context based on event type
       this.updateContext(context, eventType);
       
+      // Select channel ID for this event
+      const channelId = DataGenerationUtils.selectChannelId(
+        this.config.cdp.channelIds,
+        this.config.cdp.channelDistribution
+      );
+
       // Create event with realistic data
       const event: UserEvent = {
         id: DataGenerationUtils.generateId(),
@@ -125,7 +137,8 @@ export class EventGenerator {
         eventType,
         eventData: this.generateEventData(eventType, context),
         timestamp: new Date(context.baseTimestamp.getTime() + (i * DataGenerationUtils.generateRandomInt(1000, 300000))),
-        country
+        country,
+        channelId
       };
       
       events.push(event);

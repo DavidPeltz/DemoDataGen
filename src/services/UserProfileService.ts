@@ -63,11 +63,17 @@ export class UserProfileService {
       this.config.userProfiles.mobileIdProbability.registered
     );
     
+    const compartmentId = DataGenerationUtils.selectCompartmentId(
+      this.config.cdp.compartmentIds,
+      this.config.cdp.compartmentDistribution
+    );
+    
     return {
       ...user,
       profileType: 'registered' as const,
       cookieId,
-      maidId
+      maidId,
+      compartmentId
     };
   }
 
@@ -83,11 +89,17 @@ export class UserProfileService {
       this.config.userProfiles.mobileIdProbability.anonymous
     );
     
+    const compartmentId = DataGenerationUtils.selectCompartmentId(
+      this.config.cdp.compartmentIds,
+      this.config.cdp.compartmentDistribution
+    );
+    
     return {
       ...user,
       profileType: 'anonymous' as const,
       cookieId,
-      maidId
+      maidId,
+      compartmentId
     };
   }
 

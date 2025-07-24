@@ -43,5 +43,21 @@
     "recordsPerType": 5,
     "includeFieldMappings": false,
     "schemaPath": "schema.graphql"
+  },
+  "cdp": {
+    "compartmentIds": ["compartment-001", "compartment-002", "compartment-003"],
+    "channelIds": ["website", "mobile-app", "email", "social"],
+    "compartmentDistribution": {
+      "compartment-001": 0.4,
+      "compartment-002": 0.35,
+      "compartment-003": 0.25
+    },
+    "channelDistribution": {
+      "website": 0.5,
+      "mobile-app": 0.3,
+      "email": 0.15,
+      "social": 0.05
+    },
+    "includeCDPMetadata": true
   }
 } 

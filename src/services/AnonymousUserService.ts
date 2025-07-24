@@ -89,6 +89,7 @@ export class AnonymousUserService {
       profileType: 'anonymous',
       cookieId: profile.cookieId,
       maidId: profile.maidId,
+      compartmentId: profile.compartmentId, // Keep compartment ID for organizational structure
       // Remove all personal data - use placeholder values
       firstName: '',
       lastName: '',
