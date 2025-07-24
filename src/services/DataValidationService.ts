@@ -53,6 +53,13 @@ export class DataValidationService {
       errors.push('User profile email must be a valid email address');
     }
 
+    // Email hash validation
+    if (!profile.email_hash) {
+      errors.push('User profile must have an email_hash');
+    } else if (!ValidationUtils.isValidSHA256Hash(profile.email_hash)) {
+      errors.push('Email hash must be a valid SHA256 hash');
+    }
+
     if (!profile.firstName) {
       errors.push('User profile must have a firstName');
     }

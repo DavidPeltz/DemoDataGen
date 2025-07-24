@@ -11,9 +11,11 @@
  * - Event data generation
  * - ID generation patterns
  * - Consistent data formats
+ * - Email hashing for privacy compliance
  */
 
 import { faker } from '@faker-js/faker';
+import * as crypto from 'crypto';
 
 /**
  * Data Generation Utilities
@@ -23,6 +25,16 @@ import { faker } from '@faker-js/faker';
  */
 export class DataGenerationUtils {
   
+  /**
+   * Generates a SHA256 hash of the provided string
+   * 
+   * @param input - String to hash
+   * @returns string - SHA256 hash in hexadecimal format
+   */
+  static generateSHA256Hash(input: string): string {
+    return crypto.createHash('sha256').update(input).digest('hex');
+  }
+
   /**
    * Generates a unique identifier
    * 
@@ -82,6 +94,24 @@ export class DataGenerationUtils {
     if (firstName) emailOptions.firstName = firstName;
     if (lastName) emailOptions.lastName = lastName;
     return faker.internet.email(emailOptions);
+  }
+
+  /**
+   * Generates email address with SHA256 hash for privacy compliance
+   * 
+   * @param firstName - Optional first name for email
+   * @param lastName - Optional last name for email
+   * @param domain - Optional domain (default: 'mediarithmics.com')
+   * @returns { email: string; email_hash: string } - Email address and its SHA256 hash
+   */
+  static generateEmailWithHash(
+    firstName?: string, 
+    lastName?: string, 
+    domain: string = 'mediarithmics.com'
+  ): { email: string; email_hash: string } {
+    const email = this.generateEmail(firstName, lastName, domain);
+    const email_hash = this.generateSHA256Hash(email);
+    return { email, email_hash };
   }
 
   /**

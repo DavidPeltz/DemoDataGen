@@ -35,6 +35,7 @@ A comprehensive TypeScript application for generating realistic demo data for Cu
 - **Non-Transactional Events**: Anonymous users only receive privacy-safe events
 - **Identifier Management**: Cookie IDs and MAID (Mobile Advertising ID) for anonymous tracking
 - **Personal Data Sanitization**: Automatic removal of personal information for anonymous users
+- **Email Hashing**: SHA256 hashing of email addresses for privacy compliance and data anonymization
 - **GDPR Compliance**: Built-in privacy protection patterns
 
 ## 📁 Project Structure
@@ -170,6 +171,7 @@ The application automatically applies environment-specific overrides:
 
 ### User Profiles
 - Realistic personal information (names, emails, addresses)
+- Email SHA256 hashing for privacy compliance
 - Country-specific data (cities, states, zip codes)
 - Tracking identifiers (cookie IDs, mobile advertising IDs)
 - Profile types (registered vs anonymous users)
@@ -246,6 +248,7 @@ Anonymous users are automatically filtered to only receive non-transactional eve
 #### Profile Sanitization
 Anonymous user profiles are automatically sanitized to remove personal data:
 - Empty names, emails, and addresses
+- Empty email hashes for privacy compliance
 - Only tracking identifiers (cookieId, maidId)
 - No personal demographic information
 
@@ -364,6 +367,13 @@ For support and questions:
 - Review the test files for usage examples
 
 ## 🔄 Recent Updates
+
+### Version 2.3 - Email Hashing for Privacy Compliance
+- **Email SHA256 Hashing**: All user profiles now include SHA256 hashes of email addresses
+- **Privacy Compliance**: Enhanced data anonymization for GDPR and privacy regulations
+- **Anonymous User Support**: Empty email hashes for anonymous users maintaining privacy
+- **Validation Integration**: Comprehensive validation for email hash format and integrity
+- **Data Generation Utilities**: New email generation methods with integrated hashing
 
 ### Version 2.2 - Code Optimization & Deduplication
 - **ValidationUtils**: Centralized validation functions eliminating code duplication

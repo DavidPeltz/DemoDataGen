@@ -121,13 +121,25 @@ export class ValidationUtils {
   }
 
   /**
-   * Validates probability value is between 0 and 1
+   * Validates if a probability value is within valid range (0-1)
    * 
    * @param probability - Probability value to validate
    * @returns boolean - True if probability is valid
    */
   static isValidProbability(probability: number): boolean {
     return probability >= 0 && probability <= 1;
+  }
+
+  /**
+   * Validates if a string is a valid SHA256 hash
+   * 
+   * @param hash - Hash string to validate
+   * @returns boolean - True if hash is a valid SHA256 hash
+   */
+  static isValidSHA256Hash(hash: string): boolean {
+    // SHA256 hashes are 64 characters long and contain only hexadecimal characters
+    const sha256Regex = /^[a-fA-F0-9]{64}$/;
+    return sha256Regex.test(hash);
   }
 
   /**

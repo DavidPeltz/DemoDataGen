@@ -93,6 +93,7 @@ export class AnonymousUserService {
       firstName: '',
       lastName: '',
       email: '',
+      email_hash: '', // Empty hash for anonymous users
       address: {
         street: '',
         city: '',

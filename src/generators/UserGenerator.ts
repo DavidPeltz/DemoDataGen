@@ -51,12 +51,14 @@ export class UserGenerator {
    */
     generateUser(): User {
     const { firstName, lastName } = DataGenerationUtils.generateUserName();
+    const { email, email_hash } = DataGenerationUtils.generateEmailWithHash(firstName, lastName);
 
     return {
       id: DataGenerationUtils.generateId(),
       firstName,
       lastName,
-      email: DataGenerationUtils.generateEmail(firstName, lastName),
+      email,
+      email_hash,
       address: DataGenerationUtils.generateAddress(),
       createdAt: DataGenerationUtils.generatePastDate(),
     };
@@ -159,12 +161,16 @@ export class UserGenerator {
         ? DataGenerationUtils.generateRandomElement(countryData.states)
         : DataGenerationUtils.generateAddress().state;
 
+      // Generate email with hash for privacy compliance
+      const { email, email_hash } = DataGenerationUtils.generateEmailWithHash(firstName, lastName);
+
       // Create and return the complete user object
       return {
         id: DataGenerationUtils.generateId(),
         firstName,
         lastName,
-        email: DataGenerationUtils.generateEmail(firstName, lastName),
+        email,
+        email_hash,
         address: {
           street: DataGenerationUtils.generateAddress().street,
           city,

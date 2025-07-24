@@ -55,6 +55,7 @@ export class EventGenerator {
     
     for (let i = 0; i < anonymousUserCount; i++) {
       const { firstName, lastName } = DataGenerationUtils.generateUserName();
+      const { email, email_hash } = DataGenerationUtils.generateEmailWithHash(firstName, lastName);
       const { cookieId, maidId } = DataGenerationUtils.generateTrackingIds(
         true, 
         this.config.userProfiles.mobileIdProbability.anonymous
@@ -64,7 +65,8 @@ export class EventGenerator {
         id: DataGenerationUtils.generateId(),
         firstName,
         lastName,
-        email: DataGenerationUtils.generateEmail(firstName, lastName),
+        email,
+        email_hash,
         address: DataGenerationUtils.generateAddress(country),
         createdAt: DataGenerationUtils.generatePastDate(),
         profileType: 'anonymous',

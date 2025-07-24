@@ -18,6 +18,7 @@
  * @property firstName - User's first name
  * @property lastName - User's last name
  * @property email - User's email address (uses mediarithmics.com domain)
+ * @property email_hash - SHA256 hash of the email address for privacy compliance
  * @property phone - User's phone number (optional - not currently generated)
  * @property address - Complete address information
  * @property createdAt - Timestamp when the user profile was created
@@ -27,6 +28,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  email_hash: string;
   phone?: string; // Optional field - not currently generated in the application
   address: {
     street: string;
