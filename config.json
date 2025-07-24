@@ -1,7 +1,7 @@
 {
   "dataGeneration": {
-    "country": "US",
-    "userCount": 20,
+    "country": "Uk",
+    "userCount": 200,
     "eventCountPerUser": {
       "min": 10,
       "max": 20
@@ -38,9 +38,10 @@
     "showSummary": true
   },
   "graphql": {
-    "enabled": false,
+    "enabled": true,
     "generateAllTypes": true,
     "recordsPerType": 5,
-    "includeFieldMappings": false
+    "includeFieldMappings": false,
+    "schemaPath": "schema.graphql"
   }
 } 

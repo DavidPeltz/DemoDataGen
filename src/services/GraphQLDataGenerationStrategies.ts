@@ -9,8 +9,8 @@
  * and provide focused data generation functionality.
  */
 
-import { faker } from '@faker-js/faker';
 import { GraphQLField, DataGenerationStrategy } from '../types/graphql';
+import { DataGenerationUtils } from '../utils/DataGenerationUtils';
 
 /**
  * GraphQL Data Generation Strategies Service
@@ -29,118 +29,118 @@ export class GraphQLDataGenerationStrategies {
   generateValueByStrategy(strategy: DataGenerationStrategy, field: GraphQLField): any {
     switch (strategy) {
       case 'uuid':
-        return faker.string.uuid();
+        return DataGenerationUtils.generateId();
       
       case 'email':
-        return faker.internet.email({ provider: 'mediarithmics.com' });
+        return DataGenerationUtils.generateEmail();
       
       case 'firstName':
-        return faker.person.firstName();
+        return DataGenerationUtils.generateUserName().firstName;
       
       case 'lastName':
-        return faker.person.lastName();
+        return DataGenerationUtils.generateUserName().lastName;
       
       case 'fullName':
-        return faker.person.fullName();
+        return DataGenerationUtils.generateUserName().fullName;
       
       case 'phone':
-        return faker.phone.number();
+        return DataGenerationUtils.generatePhoneNumber();
       
       case 'address':
-        return faker.location.streetAddress();
+        return DataGenerationUtils.generateAddress().street;
       
       case 'city':
-        return faker.location.city();
+        return DataGenerationUtils.generateAddress().city;
       
       case 'state':
-        return faker.location.state();
+        return DataGenerationUtils.generateAddress().state;
       
       case 'country':
-        return faker.location.country();
+        return DataGenerationUtils.generateAddress().country;
       
       case 'zipCode':
-        return faker.location.zipCode();
+        return DataGenerationUtils.generateAddress().zipCode;
       
       case 'company':
-        return faker.company.name();
+        return DataGenerationUtils.generateCompanyData().name;
       
       case 'jobTitle':
-        return faker.person.jobTitle();
+        return DataGenerationUtils.generateCompanyData().jobTitle;
       
       case 'date':
-        return faker.date.past();
+        return DataGenerationUtils.generatePastDate();
       
       case 'datetime':
-        return faker.date.recent();
+        return DataGenerationUtils.generateRecentDate();
       
       case 'timestamp':
         return new Date().toISOString();
       
       case 'boolean':
-        return faker.datatype.boolean();
+        return DataGenerationUtils.generateRandomBoolean();
       
       case 'integer':
-        return faker.number.int({ min: 1, max: 1000 });
+        return DataGenerationUtils.generateRandomInt(1, 1000);
       
       case 'float':
-        return parseFloat(faker.commerce.price());
+        return DataGenerationUtils.generateRandomFloat(1, 1000);
       
       case 'string':
-        return faker.lorem.sentence();
+        return DataGenerationUtils.generateRandomSentence();
       
       case 'enum':
         return this.generateEnumValue(field);
       
       case 'url':
-        return faker.internet.url();
+        return DataGenerationUtils.generateEventData('page_view')['pageUrl'];
       
       case 'ipAddress':
-        return faker.internet.ip();
+        return DataGenerationUtils.generateEventData('page_view')['ipAddress'];
       
       case 'userAgent':
-        return faker.internet.userAgent();
+        return DataGenerationUtils.generateEventData('page_view')['userAgent'];
       
       case 'deviceType':
-        return faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']);
+        return DataGenerationUtils.generateEventData('page_view')['deviceType'];
       
       case 'browser':
-        return faker.helpers.arrayElement(['Chrome', 'Firefox', 'Safari', 'Edge']);
+        return DataGenerationUtils.generateEventData('page_view')['browser'];
       
       case 'operatingSystem':
-        return faker.helpers.arrayElement(['Windows', 'macOS', 'Linux', 'iOS', 'Android']);
+        return DataGenerationUtils.generateEventData('page_view')['os'];
       
       case 'productName':
-        return faker.commerce.productName();
+        return DataGenerationUtils.generateProductData().name;
       
       case 'productDescription':
-        return faker.commerce.productDescription();
+        return DataGenerationUtils.generateProductData().description;
       
       case 'price':
-        return parseFloat(faker.commerce.price());
+        return DataGenerationUtils.generateProductData().price;
       
       case 'category':
-        return faker.commerce.department();
+        return DataGenerationUtils.generateProductData().category;
       
       case 'tags':
-        return faker.helpers.arrayElements(['electronics', 'clothing', 'books', 'home', 'sports'], { min: 1, max: 3 });
+        return DataGenerationUtils.generateProductData().tags;
       
       case 'quantity':
-        return faker.number.int({ min: 1, max: 10 });
+        return DataGenerationUtils.generateRandomInt(1, 10);
       
       case 'rating':
-        return faker.number.float({ min: 1, max: 5, fractionDigits: 1 });
+        return DataGenerationUtils.generateRandomFloat(1, 5, 1);
       
       case 'review':
-        return faker.lorem.paragraph();
+        return DataGenerationUtils.generateRandomParagraph();
       
       case 'searchQuery':
-        return faker.helpers.arrayElement(['laptop', 'phone', 'headphones', 'shoes', 'dress', 'book']);
+        return DataGenerationUtils.generateEventData('search')['query'];
       
       case 'paymentMethod':
-        return faker.helpers.arrayElement(['credit_card', 'paypal', 'apple_pay', 'google_pay']);
+        return DataGenerationUtils.generateEventData('transaction_complete')['paymentMethod'];
       
       case 'orderStatus':
-        return faker.helpers.arrayElement(['pending', 'processing', 'shipped', 'delivered', 'cancelled']);
+        return DataGenerationUtils.generateRandomElement(['pending', 'processing', 'shipped', 'delivered', 'cancelled']);
       
       case 'custom':
         return this.generateCustomValue(field);
@@ -161,22 +161,22 @@ export class GraphQLDataGenerationStrategies {
     const fieldType = this.getBaseType(field.type);
     
     if (fieldType && fieldType.enumValues && fieldType.enumValues.length > 0) {
-      return faker.helpers.arrayElement(fieldType.enumValues.map((ev: any) => ev.name));
+      return DataGenerationUtils.generateRandomElement(fieldType.enumValues.map((ev: any) => ev.name));
     }
     
     // Fallback to common enum patterns based on field name
     const fieldName = field.name.toLowerCase();
     
     if (fieldName.includes('status')) {
-      return faker.helpers.arrayElement(['active', 'inactive', 'pending', 'completed']);
+      return DataGenerationUtils.generateRandomElement(['active', 'inactive', 'pending', 'completed']);
     }
     
     if (fieldName.includes('type')) {
-      return faker.helpers.arrayElement(['user', 'admin', 'guest', 'premium']);
+      return DataGenerationUtils.generateRandomElement(['user', 'admin', 'guest', 'premium']);
     }
     
     if (fieldName.includes('role')) {
-      return faker.helpers.arrayElement(['user', 'admin', 'moderator', 'editor']);
+      return DataGenerationUtils.generateRandomElement(['user', 'admin', 'moderator', 'editor']);
     }
     
     return 'default';
@@ -210,11 +210,11 @@ export class GraphQLDataGenerationStrategies {
    */
   private generatePlaceholderObject(field: GraphQLField): any {
     return {
-      id: faker.string.uuid(),
+      id: DataGenerationUtils.generateId(),
       name: `${field.name}_placeholder`,
       description: `Placeholder object for ${field.name}`,
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent()
+      createdAt: DataGenerationUtils.generatePastDate(),
+      updatedAt: DataGenerationUtils.generateRecentDate()
     };
   }
 
@@ -225,21 +225,21 @@ export class GraphQLDataGenerationStrategies {
    * @returns any[] - The generated array
    */
   private generateArrayValue(field: GraphQLField): any[] {
-    const arrayLength = faker.number.int({ min: 1, max: 5 });
+    const arrayLength = DataGenerationUtils.generateRandomInt(1, 5);
     const elementType = this.getBaseType(field.type.ofType);
     
     if (elementType.kind === 'SCALAR') {
       switch (elementType.name) {
         case 'String':
-          return Array.from({ length: arrayLength }, () => faker.lorem.word());
+          return Array.from({ length: arrayLength }, () => DataGenerationUtils.generateRandomSentence(1));
         case 'Int':
-          return Array.from({ length: arrayLength }, () => faker.number.int({ min: 1, max: 100 }));
+          return Array.from({ length: arrayLength }, () => DataGenerationUtils.generateRandomInt(1, 100));
         case 'Float':
-          return Array.from({ length: arrayLength }, () => parseFloat(faker.commerce.price()));
+          return Array.from({ length: arrayLength }, () => DataGenerationUtils.generateRandomFloat(1, 100));
         case 'Boolean':
-          return Array.from({ length: arrayLength }, () => faker.datatype.boolean());
+          return Array.from({ length: arrayLength }, () => DataGenerationUtils.generateRandomBoolean());
         default:
-          return Array.from({ length: arrayLength }, () => faker.lorem.word());
+          return Array.from({ length: arrayLength }, () => DataGenerationUtils.generateRandomSentence(1));
       }
     }
     
@@ -264,17 +264,17 @@ export class GraphQLDataGenerationStrategies {
       case 'SCALAR':
         switch (fieldType.name) {
           case 'String':
-            return faker.lorem.sentence();
+            return DataGenerationUtils.generateRandomSentence();
           case 'Int':
-            return faker.number.int({ min: 1, max: 100 });
+            return DataGenerationUtils.generateRandomInt(1, 100);
           case 'Float':
-            return parseFloat(faker.commerce.price());
+            return DataGenerationUtils.generateRandomFloat(1, 100);
           case 'Boolean':
-            return faker.datatype.boolean();
+            return DataGenerationUtils.generateRandomBoolean();
           case 'ID':
-            return faker.string.uuid();
+            return DataGenerationUtils.generateId();
           default:
-            return faker.lorem.sentence();
+            return DataGenerationUtils.generateRandomSentence();
         }
       case 'ENUM':
         return this.generateEnumValue(field);

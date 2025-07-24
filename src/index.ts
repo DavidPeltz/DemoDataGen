@@ -24,6 +24,8 @@ import { DataValidationService } from './services/DataValidationService';
 import { EventGenerator } from './services/EventGenerator';
 import { FileService } from './services/FileService';
 import { UserProfileService } from './services/UserProfileService';
+import { GraphQLGenerationService } from './services/GraphQLGenerationService';
+import { AnonymousUserService } from './services/AnonymousUserService';
 
 
 
@@ -90,6 +92,8 @@ async function main(): Promise<void> {
     const userProfileService = new UserProfileService(config);
     const eventGenerator = new EventGenerator(config);
     const fileService = new FileService(config);
+    const graphqlService = new GraphQLGenerationService(config.graphql, loggingService);
+    const anonymousUserService = new AnonymousUserService();
 
     // Step 4: Generate sample data
     if (config.logging.showProgress) {
@@ -100,7 +104,12 @@ async function main(): Promise<void> {
     const users = userGenerator.generateUsersForCountry(config.dataGeneration.userCount, config.dataGeneration.country);
     
     // Convert users to profiles with tracking information using the service
-    const userProfiles = userProfileService.generateUserProfiles(users);
+    let userProfiles = userProfileService.generateUserProfiles(users);
+    
+    // Apply anonymous user sanitization to remove personal data
+    userProfiles = userProfiles.map(profile => 
+      anonymousUserService.sanitizeAnonymousProfile(profile)
+    );
     
     // Display generated user profiles with visual indicators
     userProfileService.displayUserProfiles(userProfiles);
@@ -126,13 +135,34 @@ async function main(): Promise<void> {
     }
 
     // Generate user events with proper linking to profiles using the service
-    const events = eventGenerator.generateUserEvents(userProfiles, config.dataGeneration.country);
+    let events = eventGenerator.generateUserEvents(userProfiles, config.dataGeneration.country);
+    
+    // Filter events for anonymous users to ensure only non-transactional events
+    events = events.map(event => {
+      const profile = userProfiles.find(p => p.id === event.userId);
+      if (profile) {
+        return anonymousUserService.filterAnonymousEvents([event], profile)[0] || event;
+      }
+      return event;
+    });
+    
     if (config.logging.showSummary) {
       console.log(`📊 Generated ${events.length} User Events (last 30 days)`);
     }
     
+    // Generate GraphQL-based data if enabled
+    let graphqlData: Record<string, any[]> | null = null;
+    if (graphqlService.isGraphQLEnabled()) {
+      graphqlData = await graphqlService.generateGraphQLData();
+    }
+    
     // Save all generated data to files using the service
     fileService.saveDataToFiles(userProfiles, events, config.dataGeneration.country);
+    
+    // Save GraphQL data if generated
+    if (graphqlData) {
+      await fileService.saveGraphQLData(graphqlData, config.dataGeneration.country);
+    }
 
     if (config.logging.showSummary) {
       console.log('\n✅ Demo data generation completed successfully!');

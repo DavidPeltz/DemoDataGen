@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { UserProfile, UserEvent } from '../types/events';
 import { Config } from '../types/config';
+import { LoggingService } from './LoggingService';
 
 /**
  * File Service
@@ -21,9 +22,11 @@ import { Config } from '../types/config';
  */
 export class FileService {
   private config: Config;
+  private loggingService: LoggingService;
 
   constructor(config: Config) {
     this.config = config;
+    this.loggingService = new LoggingService(config.logging.level);
   }
 
   /**
@@ -58,12 +61,68 @@ export class FileService {
     
     // Display file paths to user if summary is enabled
     if (this.config.logging.showSummary) {
-      console.log(`📁 Data saved to:`);
-      console.log(`   👥 User profiles: ${userProfilesPath}`);
-      console.log(`   📊 User events: ${eventsPath}`);
+      this.loggingService.info(`📁 Data saved to:`);
+      this.loggingService.info(`   👥 User profiles: ${userProfilesPath}`);
+      this.loggingService.info(`   📊 User events: ${eventsPath}`);
     }
     
     return { userProfilesPath, eventsPath };
+  }
+
+  /**
+   * Saves GraphQL-generated data to separate files for each type
+   * 
+   * This function creates individual NDJSON files for each GraphQL type,
+   * making it easy to work with specific data types. Files are organized
+   * by type name and include timestamps for versioning.
+   * 
+   * @param graphqlData - Object containing data organized by GraphQL type
+   * @param country - Country name used for file naming
+   * @returns Promise<void> - Resolves when all files are saved
+   */
+  async saveGraphQLData(graphqlData: Record<string, any[]>, country: string): Promise<void> {
+    // Create output directory based on configuration
+    const outputDir = this.createOutputDirectory();
+    
+    // Normalize country name for file naming
+    const normalizedCountry = this.normalizeCountryName(country);
+    
+    // Add timestamp to filename if configured
+    const timestamp = this.config.output.includeTimestamp ? `_${new Date().toISOString().replace(/[:.]/g, '-')}` : '';
+    
+    // Save each GraphQL type to a separate file
+    const savedFiles: string[] = [];
+    
+    for (const [typeName, records] of Object.entries(graphqlData)) {
+      const filename = `graphql_${typeName.toLowerCase()}_${normalizedCountry}${timestamp}.ndjson`;
+      const filePath = path.join(outputDir, filename);
+      
+      this.saveToNDJSON(filePath, records);
+      savedFiles.push(filename);
+    }
+    
+    // Create a summary file with metadata
+    const summaryFile = path.join(outputDir, `graphql_summary_${normalizedCountry}${timestamp}.json`);
+    const summary = {
+      generatedAt: new Date().toISOString(),
+      country: country,
+      totalTypes: Object.keys(graphqlData).length,
+      totalRecords: Object.values(graphqlData).reduce((sum, records) => sum + records.length, 0),
+      files: savedFiles,
+      types: Object.keys(graphqlData).map(typeName => ({
+        name: typeName,
+        recordCount: graphqlData[typeName]?.length || 0
+      }))
+    };
+    
+    this.writeFile(summaryFile, JSON.stringify(summary, null, 2));
+    
+    // Display GraphQL file paths if summary is enabled
+    if (this.config.logging.showSummary) {
+      this.loggingService.info(`📁 GraphQL data saved:`);
+      this.loggingService.info(`   📊 ${Object.keys(graphqlData).length} type files created`);
+      this.loggingService.info(`   📋 Summary: ${summaryFile}`);
+    }
   }
 
   /**

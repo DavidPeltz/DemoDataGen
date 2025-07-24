@@ -8,10 +8,10 @@
  * Extracted from index.ts to improve separation of concerns and maintainability.
  */
 
-import { faker } from '@faker-js/faker';
 import { UserProfile, UserEvent, EventGenerationContext } from '../types/events';
 import { EventType } from '../types';
 import { Config } from '../types/config';
+import { DataGenerationUtils } from '../utils/DataGenerationUtils';
 
 /**
  * Event Generator Service
@@ -48,34 +48,28 @@ export class EventGenerator {
     
     // Generate additional anonymous events (no associated user profile)
     // This simulates users who haven't created profiles but are still tracked
-    const anonymousUserCount = faker.number.int({ 
-      min: this.config.dataGeneration.anonymousUserCount.min, 
-      max: this.config.dataGeneration.anonymousUserCount.max 
-    });
+    const anonymousUserCount = DataGenerationUtils.generateRandomInt(
+      this.config.dataGeneration.anonymousUserCount.min, 
+      this.config.dataGeneration.anonymousUserCount.max 
+    );
     
     for (let i = 0; i < anonymousUserCount; i++) {
+      const { firstName, lastName } = DataGenerationUtils.generateUserName();
+      const { cookieId, maidId } = DataGenerationUtils.generateTrackingIds(
+        true, 
+        this.config.userProfiles.mobileIdProbability.anonymous
+      );
+      
       const anonymousProfile: UserProfile = {
-        id: faker.string.uuid(),
-        firstName: faker.person.firstName(),
-        lastName: faker.person.lastName(),
-        email: faker.internet.email({ 
-          firstName: faker.person.firstName(), 
-          lastName: faker.person.lastName(), 
-          provider: 'mediarithmics.com' 
-        }),
-        address: {
-          street: faker.location.streetAddress(),
-          city: faker.location.city(),
-          state: faker.location.state(),
-          zipCode: faker.location.zipCode(),
-          country
-        },
-        createdAt: faker.date.past(),
+        id: DataGenerationUtils.generateId(),
+        firstName,
+        lastName,
+        email: DataGenerationUtils.generateEmail(firstName, lastName),
+        address: DataGenerationUtils.generateAddress(country),
+        createdAt: DataGenerationUtils.generatePastDate(),
         profileType: 'anonymous',
-        cookieId: faker.string.uuid(),
-        maidId: faker.datatype.boolean({ 
-          probability: this.config.userProfiles.mobileIdProbability.anonymous 
-        }) ? faker.string.uuid() : undefined
+        cookieId,
+        maidId
       };
       
       const anonymousEvents = this.generateUserEventSequence(anonymousProfile, country);
@@ -98,10 +92,10 @@ export class EventGenerator {
    */
   private generateUserEventSequence(profile: UserProfile, country: string): UserEvent[] {
     const events: UserEvent[] = [];
-    const eventCount = faker.number.int({ 
-      min: this.config.dataGeneration.eventCountPerUser.min, 
-      max: this.config.dataGeneration.eventCountPerUser.max 
-    });
+    const eventCount = DataGenerationUtils.generateRandomInt(
+      this.config.dataGeneration.eventCountPerUser.min, 
+      this.config.dataGeneration.eventCountPerUser.max 
+    );
     
     // Initialize event generation context
     const context: EventGenerationContext = {
@@ -109,8 +103,8 @@ export class EventGenerator {
       hasViewedCart: false,
       hasCheckedOut: false,
       cartItems: 0,
-      sessionId: faker.string.uuid(),
-      baseTimestamp: faker.date.recent({ days: 30 })
+      sessionId: DataGenerationUtils.generateId(),
+      baseTimestamp: DataGenerationUtils.generateRecentDate()
     };
     
     for (let i = 0; i < eventCount; i++) {
@@ -122,24 +116,22 @@ export class EventGenerator {
       
       // Create event with realistic data
       const event: UserEvent = {
-        id: faker.string.uuid(),
+        id: DataGenerationUtils.generateId(),
         userId: profile.profileType === 'registered' ? profile.id : undefined,
         cookieId: profile.cookieId,
         maidId: profile.maidId,
         eventType,
         eventData: this.generateEventData(eventType, context),
-        timestamp: new Date(context.baseTimestamp.getTime() + (i * faker.number.int({ min: 1000, max: 300000 }))),
+        timestamp: new Date(context.baseTimestamp.getTime() + (i * DataGenerationUtils.generateRandomInt(1000, 300000))),
         country
       };
       
       events.push(event);
       
       // Session continuation based on configuration
-      if (i > 0 && faker.datatype.boolean({ 
-        probability: 1 - this.config.eventGeneration.sessionContinuationProbability 
-      })) {
-        context.sessionId = faker.string.uuid();
-        context.baseTimestamp = faker.date.recent({ days: 30 });
+      if (i > 0 && DataGenerationUtils.generateRandomBoolean(1 - this.config.eventGeneration.sessionContinuationProbability)) {
+        context.sessionId = DataGenerationUtils.generateId();
+        context.baseTimestamp = DataGenerationUtils.generateRecentDate();
       }
     }
     
@@ -156,54 +148,54 @@ export class EventGenerator {
   private determineEventType(context: EventGenerationContext, eventIndex: number): EventType {
     // First event is always page_view or search
     if (eventIndex === 0) {
-      return faker.helpers.arrayElement(['page_view', 'search'] as EventType[]);
+      return DataGenerationUtils.generateRandomElement(['page_view', 'search'] as EventType[]);
     }
     
     // After checkout, can have transaction_complete
-    if (context.hasCheckedOut && faker.datatype.boolean({ 
-      probability: this.config.eventGeneration.transactionAfterCheckoutProbability 
-    })) {
+    if (context.hasCheckedOut && DataGenerationUtils.generateRandomBoolean(
+      this.config.eventGeneration.transactionAfterCheckoutProbability 
+    )) {
       return 'transaction_complete';
     }
     
     // After checkout, mostly browsing events
     if (context.hasCheckedOut) {
-      return faker.helpers.arrayElement([
+      return DataGenerationUtils.generateRandomElement([
         'page_view', 'search', 'article_view', 'video_view', 'audio_listen',
         'ad_view', 'ad_click', 'email_open', 'email_click', 'richpush_open', 'richpush_click'
       ] as EventType[]);
     }
     
     // After viewing cart, can checkout
-    if (context.hasViewedCart && faker.datatype.boolean({ 
-      probability: this.config.eventGeneration.checkoutAfterViewCartProbability 
-    })) {
+    if (context.hasViewedCart && DataGenerationUtils.generateRandomBoolean(
+      this.config.eventGeneration.checkoutAfterViewCartProbability 
+    )) {
       return 'checkout';
     }
     
     // After adding to cart, likely to view cart
-    if (context.hasAddedToCart && faker.datatype.boolean({ 
-      probability: this.config.eventGeneration.viewCartAfterAddProbability 
-    })) {
+    if (context.hasAddedToCart && DataGenerationUtils.generateRandomBoolean(
+      this.config.eventGeneration.viewCartAfterAddProbability 
+    )) {
       return 'view_cart';
     }
     
     // Can remove items from cart
-    if (context.hasAddedToCart && faker.datatype.boolean({ 
-      probability: this.config.eventGeneration.removeFromCartProbability 
-    })) {
+    if (context.hasAddedToCart && DataGenerationUtils.generateRandomBoolean(
+      this.config.eventGeneration.removeFromCartProbability 
+    )) {
       return 'remove_itemFromCart';
     }
     
     // Chance to add to cart if browsing
-    if (faker.datatype.boolean({ 
-      probability: this.config.eventGeneration.addToCartProbability 
-    })) {
+    if (DataGenerationUtils.generateRandomBoolean(
+      this.config.eventGeneration.addToCartProbability 
+    )) {
       return 'add_itemToCart';
     }
     
     // Default to browsing events
-    return faker.helpers.arrayElement([
+    return DataGenerationUtils.generateRandomElement([
       'page_view', 'search', 'article_view', 'video_view', 'audio_listen',
       'ad_view', 'ad_click', 'email_open', 'email_click', 'richpush_open', 'richpush_click'
     ] as EventType[]);
@@ -241,102 +233,105 @@ export class EventGenerator {
    * @returns Record<string, unknown> - Event-specific data
    */
   private generateEventData(eventType: EventType, context: EventGenerationContext): Record<string, unknown> {
+    const pageViewData = DataGenerationUtils.generateEventData('page_view');
     const baseData = {
-      pageUrl: faker.internet.url(),
-      userAgent: faker.internet.userAgent(),
-      ipAddress: faker.internet.ip(),
+      pageUrl: pageViewData['pageUrl'],
+      userAgent: pageViewData['userAgent'],
+      ipAddress: pageViewData['ipAddress'],
       sessionId: context.sessionId,
-      referrer: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.7 }),
-      deviceType: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
-      browser: faker.helpers.arrayElement(['Chrome', 'Firefox', 'Safari', 'Edge']),
-      os: faker.helpers.arrayElement(['Windows', 'macOS', 'Linux', 'iOS', 'Android'])
+      referrer: DataGenerationUtils.generateRandomBoolean(0.7) ? pageViewData['pageUrl'] : undefined,
+      deviceType: pageViewData['deviceType'],
+      browser: pageViewData['browser'],
+      os: pageViewData['os']
     };
 
     switch (eventType) {
       case 'add_itemToCart':
+        const addToCartData = DataGenerationUtils.generateEventData('add_itemtocart');
         return {
           ...baseData,
-          productId: faker.string.uuid(),
-          productName: faker.commerce.productName(),
-          quantity: faker.number.int({ min: 1, max: 3 }),
-          price: parseFloat(faker.commerce.price())
+          productId: addToCartData['productId'],
+          productName: addToCartData['productName'],
+          quantity: addToCartData['quantity'],
+          price: addToCartData['price']
         };
       
       case 'remove_itemFromCart':
+        const removeFromCartData = DataGenerationUtils.generateEventData('remove_itemfromcart');
         return {
           ...baseData,
-          productId: faker.string.uuid(),
-          productName: faker.commerce.productName(),
-          quantity: faker.number.int({ min: 1, max: 2 })
+          productId: removeFromCartData['productId'],
+          productName: removeFromCartData['productName'],
+          quantity: removeFromCartData['quantity']
         };
       
       case 'view_cart':
         return {
           ...baseData,
           itemCount: context.cartItems,
-          totalValue: parseFloat(faker.commerce.price({ min: 10, max: 500 }))
+          totalValue: DataGenerationUtils.generateRandomFloat(10, 500)
         };
       
       case 'checkout':
+        const transactionData = DataGenerationUtils.generateEventData('transaction_complete');
         return {
           ...baseData,
           itemCount: context.cartItems,
-          totalValue: parseFloat(faker.commerce.price({ min: 10, max: 500 })),
-          paymentMethod: faker.helpers.arrayElement(['credit_card', 'paypal', 'apple_pay', 'google_pay'])
+          totalValue: DataGenerationUtils.generateRandomFloat(10, 500),
+          paymentMethod: transactionData['paymentMethod']
         };
       
       case 'transaction_complete':
+        const completeTransactionData = DataGenerationUtils.generateEventData('transaction_complete');
         return {
           ...baseData,
-          orderId: faker.string.uuid(),
-          totalValue: parseFloat(faker.commerce.price({ min: 10, max: 500 })),
-          paymentMethod: faker.helpers.arrayElement(['credit_card', 'paypal', 'apple_pay', 'google_pay']),
-          shippingAddress: faker.location.streetAddress()
+          orderId: completeTransactionData['orderId'],
+          totalValue: completeTransactionData['total'],
+          paymentMethod: completeTransactionData['paymentMethod'],
+          shippingAddress: DataGenerationUtils.generateAddress().street
         };
       
       case 'search':
+        const searchData = DataGenerationUtils.generateEventData('search');
         return {
           ...baseData,
-          query: faker.helpers.arrayElement([
-            'laptop', 'phone', 'headphones', 'shoes', 'dress', 'book', 'camera', 'watch'
-          ]),
-          resultsCount: faker.number.int({ min: 10, max: 1000 })
+          query: searchData['query'],
+          resultsCount: searchData['resultsCount']
         };
       
       case 'email_open':
+        const emailOpenData = DataGenerationUtils.generateEventData('email_open');
         return {
           ...baseData,
-          emailId: faker.string.uuid(),
-          subject: faker.helpers.arrayElement([
-            'Your order confirmation', 'New products available', 'Special offer just for you',
-            'Welcome to our store', 'Flash sale - 50% off!'
-          ]),
-          campaignId: faker.string.uuid()
+          emailId: emailOpenData['emailId'],
+          subject: emailOpenData['subject'],
+          campaignId: emailOpenData['campaignId']
         };
       
       case 'email_click':
+        const emailClickData = DataGenerationUtils.generateEventData('email_click');
         return {
           ...baseData,
-          emailId: faker.string.uuid(),
-          linkUrl: faker.internet.url(),
-          linkText: faker.helpers.arrayElement(['Shop Now', 'Learn More', 'View Details', 'Get Offer'])
+          emailId: emailClickData['emailId'],
+          linkUrl: DataGenerationUtils.generateEventData('page_view')['pageUrl'],
+          linkText: DataGenerationUtils.generateRandomElement(['Shop Now', 'Learn More', 'View Details', 'Get Offer'])
         };
       
       case 'richpush_open':
         return {
           ...baseData,
-          notificationId: faker.string.uuid(),
-          title: faker.helpers.arrayElement([
+          notificationId: DataGenerationUtils.generateId(),
+          title: DataGenerationUtils.generateRandomElement([
             'New arrivals!', 'Flash sale alert', 'Order update', 'Personalized recommendations'
           ]),
-          body: faker.lorem.sentence()
+          body: DataGenerationUtils.generateRandomSentence()
         };
       
       case 'richpush_click':
         return {
           ...baseData,
-          notificationId: faker.string.uuid(),
-          action: faker.helpers.arrayElement(['view_product', 'open_cart', 'browse_category'])
+          notificationId: DataGenerationUtils.generateId(),
+          action: DataGenerationUtils.generateRandomElement(['view_product', 'open_cart', 'browse_category'])
         };
       
       default:

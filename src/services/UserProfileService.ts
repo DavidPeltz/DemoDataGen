@@ -8,10 +8,10 @@
  * Extracted from index.ts to improve separation of concerns and maintainability.
  */
 
-import { faker } from '@faker-js/faker';
 import { User } from '../types';
 import { UserProfile } from '../types/events';
 import { Config } from '../types/config';
+import { DataGenerationUtils } from '../utils/DataGenerationUtils';
 
 /**
  * User Profile Service
@@ -39,9 +39,9 @@ export class UserProfileService {
   generateUserProfiles(users: User[]): UserProfile[] {
     return users.map((user) => {
       // Determine if user is registered or anonymous based on configuration
-      const isRegistered = faker.datatype.boolean({ 
-        probability: this.config.userProfiles.registeredUserProbability 
-      });
+      const isRegistered = DataGenerationUtils.generateRandomBoolean(
+        this.config.userProfiles.registeredUserProbability
+      );
       
       if (isRegistered) {
         return this.createRegisteredProfile(user);
@@ -58,13 +58,16 @@ export class UserProfileService {
    * @returns UserProfile - Registered user profile
    */
   private createRegisteredProfile(user: User): UserProfile {
+    const { cookieId, maidId } = DataGenerationUtils.generateTrackingIds(
+      true, 
+      this.config.userProfiles.mobileIdProbability.registered
+    );
+    
     return {
       ...user,
       profileType: 'registered' as const,
-      cookieId: faker.string.uuid(), // Always generate cookie ID for web tracking
-      maidId: faker.datatype.boolean({ 
-        probability: this.config.userProfiles.mobileIdProbability.registered 
-      }) ? faker.string.uuid() : undefined
+      cookieId,
+      maidId
     };
   }
 
@@ -75,13 +78,16 @@ export class UserProfileService {
    * @returns UserProfile - Anonymous user profile
    */
   private createAnonymousProfile(user: User): UserProfile {
+    const { cookieId, maidId } = DataGenerationUtils.generateTrackingIds(
+      true, 
+      this.config.userProfiles.mobileIdProbability.anonymous
+    );
+    
     return {
       ...user,
       profileType: 'anonymous' as const,
-      cookieId: faker.string.uuid(), // Always generate cookie ID for web tracking
-      maidId: faker.datatype.boolean({ 
-        probability: this.config.userProfiles.mobileIdProbability.anonymous 
-      }) ? faker.string.uuid() : undefined
+      cookieId,
+      maidId
     };
   }
 

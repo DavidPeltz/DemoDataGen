@@ -14,9 +14,9 @@
  * - Email generation with custom domain (mediarithmics.com)
  */
 
-import { faker } from '@faker-js/faker';
 import { User } from '../types';
 import { getCountryData } from '../data/countryData';
+import { DataGenerationUtils } from '../utils/DataGenerationUtils';
 
 export class UserGenerator {
 
@@ -49,23 +49,16 @@ export class UserGenerator {
    * 
    * @returns User - A complete user object with all required fields
    */
-  generateUser(): User {
-    const firstName = faker.person.firstName();
-    const lastName = faker.person.lastName();
-    
+    generateUser(): User {
+    const { firstName, lastName } = DataGenerationUtils.generateUserName();
+
     return {
-      id: faker.string.uuid(),
+      id: DataGenerationUtils.generateId(),
       firstName,
       lastName,
-      email: faker.internet.email({ firstName, lastName, provider: 'mediarithmics.com' }),
-      address: {
-        street: faker.location.streetAddress(),
-        city: faker.location.city(),
-        state: faker.location.state(),
-        zipCode: faker.location.zipCode(),
-        country: faker.location.country(),
-      },
-      createdAt: faker.date.past(),
+      email: DataGenerationUtils.generateEmail(firstName, lastName),
+      address: DataGenerationUtils.generateAddress(),
+      createdAt: DataGenerationUtils.generatePastDate(),
     };
   }
 
@@ -135,50 +128,51 @@ export class UserGenerator {
     // Generate the specified number of users
     return Array.from({ length: count }, () => {
       // Apply gender distribution: 53% female, 47% male
-      const isFemale = faker.number.float({ min: 0, max: 1 }) < 0.53;
+      const isFemale = DataGenerationUtils.generateRandomFloat(0, 1) < 0.53;
       
       // Select first name based on gender and country availability
       let firstName: string;
       if (isFemale && countryData.femaleNames.length > 0) {
         // Use country-specific female name if available
-        firstName = faker.helpers.arrayElement(countryData.femaleNames);
+        firstName = DataGenerationUtils.generateRandomElement(countryData.femaleNames);
       } else if (!isFemale && countryData.maleNames.length > 0) {
         // Use country-specific male name if available
-        firstName = faker.helpers.arrayElement(countryData.maleNames);
+        firstName = DataGenerationUtils.generateRandomElement(countryData.maleNames);
       } else {
-        // Fall back to faker.js gender-specific names
-        firstName = isFemale ? faker.person.firstName('female') : faker.person.firstName('male');
+        // Fall back to gender-specific names
+        const { firstName: genFirstName } = DataGenerationUtils.generateUserName(isFemale ? 'female' : 'male');
+        firstName = genFirstName;
       }
       
-      // Select last name from country-specific list or fall back to faker.js
+      // Select last name from country-specific list or fall back to default
       const lastName = countryData.lastNames.length > 0 
-        ? faker.helpers.arrayElement(countryData.lastNames)
-        : faker.person.lastName();
+        ? DataGenerationUtils.generateRandomElement(countryData.lastNames)
+        : DataGenerationUtils.generateUserName().lastName;
 
-      // Select city from country-specific list or fall back to faker.js
+      // Select city from country-specific list or fall back to default
       const city = countryData.cities.length > 0 
-        ? faker.helpers.arrayElement(countryData.cities)
-        : faker.location.city();
+        ? DataGenerationUtils.generateRandomElement(countryData.cities)
+        : DataGenerationUtils.generateAddress().city;
       
-      // Select state/region from country-specific list or fall back to faker.js
+      // Select state/region from country-specific list or fall back to default
       const state = countryData.states.length > 0 
-        ? faker.helpers.arrayElement(countryData.states)
-        : faker.location.state();
+        ? DataGenerationUtils.generateRandomElement(countryData.states)
+        : DataGenerationUtils.generateAddress().state;
 
       // Create and return the complete user object
       return {
-        id: faker.string.uuid(),
+        id: DataGenerationUtils.generateId(),
         firstName,
         lastName,
-        email: faker.internet.email({ firstName, lastName, provider: 'mediarithmics.com' }),
+        email: DataGenerationUtils.generateEmail(firstName, lastName),
         address: {
-          street: faker.location.streetAddress(),
+          street: DataGenerationUtils.generateAddress().street,
           city,
           state,
-          zipCode: faker.location.zipCode(),
+          zipCode: DataGenerationUtils.generateAddress().zipCode,
           country: countryName,
         },
-        createdAt: faker.date.past(),
+        createdAt: DataGenerationUtils.generatePastDate(),
       };
     });
   }

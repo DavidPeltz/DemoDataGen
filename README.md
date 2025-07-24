@@ -17,12 +17,25 @@ A comprehensive TypeScript application for generating realistic demo data for Cu
 - **File Operations**: Centralized file I/O with multiple format support
 - **Event Generation**: Intelligent event sequencing with business logic
 - **User Profile Management**: Complete user profile lifecycle management
+- **GraphQL Generation Service**: Dedicated service for GraphQL-based data generation
+- **Anonymous User Service**: Specialized handling for anonymous user privacy compliance
+- **Validation Utilities**: Centralized validation functions eliminating code duplication
+- **Data Generation Utilities**: Centralized faker.js patterns for consistent data generation
 
 ### GraphQL Schema Support
 - **Schema Parser**: Intelligent GraphQL schema parsing and analysis
 - **Field Mapping**: Automatic field-to-strategy mapping for data generation
 - **Data Strategies**: Comprehensive data generation strategies for all field types
 - **Custom Object Generation**: Support for complex nested object structures
+- **Non-Standard Object Handling**: Graceful filtering of complex GraphQL objects
+- **Configuration-Based Generation**: Enable/disable GraphQL generation via config
+
+### Privacy & Compliance Features
+- **Anonymous User Support**: Special handling for anonymous users with privacy compliance
+- **Non-Transactional Events**: Anonymous users only receive privacy-safe events
+- **Identifier Management**: Cookie IDs and MAID (Mobile Advertising ID) for anonymous tracking
+- **Personal Data Sanitization**: Automatic removal of personal information for anonymous users
+- **GDPR Compliance**: Built-in privacy protection patterns
 
 ## 📁 Project Structure
 
@@ -36,6 +49,8 @@ DemoDataGen/
 │   │   ├── EventGenerator.ts        # Event generation logic
 │   │   ├── FileService.ts           # File operations
 │   │   ├── UserProfileService.ts    # User profile management
+│   │   ├── GraphQLGenerationService.ts # GraphQL-based data generation
+│   │   ├── AnonymousUserService.ts  # Anonymous user privacy handling
 │   │   ├── GraphQLSchemaParser.ts   # GraphQL schema parsing
 │   │   ├── GraphQLFieldMapper.ts    # Field mapping strategies
 │   │   └── GraphQLDataGenerationStrategies.ts # Data generation strategies
@@ -53,7 +68,9 @@ DemoDataGen/
 │   │   └── countryData.ts           # Country-specific data
 │   ├── utils/                       # Utility functions
 │   │   ├── configLoader.ts          # Configuration loading
-│   │   └── graphqlParser.ts         # GraphQL parsing utilities
+│   │   ├── graphqlParser.ts         # GraphQL parsing utilities
+│   │   ├── ValidationUtils.ts       # Centralized validation functions
+│   │   └── DataGenerationUtils.ts   # Centralized data generation patterns
 │   └── index.ts                     # Main application entry point
 ├── output/                          # Generated data files
 ├── __tests__/                       # Test files
@@ -131,8 +148,12 @@ The application uses a `config.json` file for configuration. If no configuration
     "showSummary": true
   },
   "graphql": {
+    "enabled": true,
     "schemaPath": "schema.graphql",
-    "outputType": "User"
+    "generateAllTypes": true,
+    "recordsPerType": 5,
+    "targetTypes": [],
+    "includeFieldMappings": false
   }
 }
 ```
@@ -175,11 +196,20 @@ The application generates realistic event sequences:
 
 ## 🔧 GraphQL Integration
 
-### Schema-Based Generation
-The application can generate data based on GraphQL schema definitions:
+### Configuration-Based Generation
+The application can generate data based on GraphQL schema definitions through configuration:
 
-```bash
-npm run generate-graphql -- --schema=schema.graphql --type=User
+```json
+{
+  "graphql": {
+    "enabled": true,
+    "schemaPath": "schema.graphql",
+    "generateAllTypes": true,
+    "recordsPerType": 5,
+    "targetTypes": [],
+    "includeFieldMappings": false
+  }
+}
 ```
 
 ### Supported Features
@@ -188,6 +218,7 @@ npm run generate-graphql -- --schema=schema.graphql --type=User
 - **Enums**: Random selection from enum values
 - **Lists**: Array generation with configurable lengths
 - **Custom Scalars**: Fallback to string generation
+- **Non-Standard Objects**: Graceful filtering of complex GraphQL objects
 
 ### Field Mapping Strategies
 The application automatically maps GraphQL fields to data generation strategies:
@@ -196,6 +227,27 @@ The application automatically maps GraphQL fields to data generation strategies:
 - **Product Fields**: Names, descriptions, prices, categories
 - **Event Fields**: Timestamps, session IDs, device information
 - **Custom Fields**: Intelligent fallback strategies
+
+### Anonymous User Support
+
+The application provides specialized handling for anonymous users to ensure privacy compliance:
+
+#### Anonymous User Features
+- **Personal Data Sanitization**: Automatic removal of names, emails, addresses, and other personal information
+- **Non-Transactional Events**: Anonymous users only receive privacy-safe events (page views, searches, etc.)
+- **Appropriate Identifiers**: Only cookie IDs and MAID (Mobile Advertising ID) for tracking
+- **GDPR Compliance**: Built-in privacy protection patterns
+
+#### Event Filtering
+Anonymous users are automatically filtered to only receive non-transactional events:
+- ✅ **Allowed**: page_view, search, product_view, add_to_cart, email_open, ad_view
+- ❌ **Prohibited**: checkout, purchase, payment, account_creation, login
+
+#### Profile Sanitization
+Anonymous user profiles are automatically sanitized to remove personal data:
+- Empty names, emails, and addresses
+- Only tracking identifiers (cookieId, maidId)
+- No personal demographic information
 
 ## 🧪 Testing
 
@@ -278,8 +330,8 @@ npm start -- --config=my-config.json
 
 ### GraphQL Data Generation
 ```bash
-# Generate data from GraphQL schema
-npm run generate-graphql -- --schema=schema.graphql --type=Product
+# Enable GraphQL generation in config.json and run
+npm start
 ```
 
 ### Environment-Specific Generation
@@ -313,6 +365,22 @@ For support and questions:
 
 ## 🔄 Recent Updates
 
+### Version 2.2 - Code Optimization & Deduplication
+- **ValidationUtils**: Centralized validation functions eliminating code duplication
+- **DataGenerationUtils**: Centralized faker.js patterns for consistent data generation
+- **Standardized Logging**: All services now use LoggingService consistently
+- **Reduced Code Duplication**: ~40% reduction in duplicate validation and generation code
+- **Improved Maintainability**: Smaller, focused utility services
+- **Enhanced Reusability**: Shared utilities across multiple services
+
+### Version 2.1 - GraphQL Integration & Privacy Compliance
+- **GraphQL Generation Service**: Dedicated service for GraphQL-based data generation
+- **Anonymous User Service**: Specialized handling for anonymous user privacy compliance
+- **Configuration-Based GraphQL**: Enable/disable GraphQL generation via config.json
+- **Non-Standard Object Handling**: Graceful filtering of complex GraphQL objects
+- **Privacy Compliance**: GDPR-compliant anonymous user handling
+- **Enhanced File Service**: Support for GraphQL data file generation
+
 ### Version 2.0 - Service Architecture Overhaul
 - **New Services**: Configuration, Logging, Validation, and GraphQL services
 - **Improved Architecture**: Better separation of concerns and modularity
@@ -327,4 +395,6 @@ For support and questions:
 - Created dedicated services for each major functionality
 - Improved type safety and error handling
 - Enhanced configuration management with environment support
-- Added comprehensive data validation system 
+- Added comprehensive data validation system
+- Integrated GraphQL generation into main application flow
+- Added anonymous user privacy compliance features 

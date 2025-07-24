@@ -14,8 +14,8 @@
  * - Category-specific product generation
  */
 
-import { faker } from '@faker-js/faker';
 import { Product } from '../types';
+import { DataGenerationUtils } from '../utils/DataGenerationUtils';
 
 export class ProductGenerator {
   /**
@@ -64,15 +64,16 @@ export class ProductGenerator {
    * @returns Product - A complete product object with all required fields
    */
   generateProduct(): Product {
+    const productData = DataGenerationUtils.generateProductData();
     return {
-      id: faker.string.uuid(),
-      name: faker.commerce.productName(),
-      description: faker.commerce.productDescription(),
-      price: parseFloat(faker.commerce.price()),
-      category: faker.helpers.arrayElement(this.categories),
-      inStock: faker.datatype.boolean(),
-      tags: faker.helpers.arrayElements(this.tags, { min: 1, max: 4 }),
-      createdAt: faker.date.past(),
+      id: DataGenerationUtils.generateId(),
+      name: productData.name,
+      description: productData.description,
+      price: productData.price,
+      category: DataGenerationUtils.generateRandomElement(this.categories),
+      inStock: DataGenerationUtils.generateRandomBoolean(),
+      tags: DataGenerationUtils.generateRandomSubset(this.tags, DataGenerationUtils.generateRandomInt(1, 4)),
+      createdAt: DataGenerationUtils.generatePastDate(),
     };
   }
 
@@ -123,7 +124,7 @@ export class ProductGenerator {
     return Array.from({ length: count }, () => {
       const product = this.generateProduct();
       // Override the default price with one within the specified range
-      product.price = faker.number.float({ min: minPrice, max: maxPrice, fractionDigits: 2 });
+      product.price = DataGenerationUtils.generateRandomFloat(minPrice, maxPrice, 2);
       return product;
     });
   }

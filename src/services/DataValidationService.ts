@@ -15,6 +15,7 @@
 
 import { UserProfile, UserEvent } from '../types/events';
 import { Config } from '../types/config';
+import { ValidationUtils } from '../utils/ValidationUtils';
 
 /**
  * Validation result structure
@@ -48,7 +49,7 @@ export class DataValidationService {
 
     if (!profile.email) {
       errors.push('User profile must have an email address');
-    } else if (!this.isValidEmail(profile.email)) {
+    } else if (!ValidationUtils.isValidEmail(profile.email)) {
       errors.push('User profile email must be a valid email address');
     }
 
@@ -61,32 +62,32 @@ export class DataValidationService {
     }
 
     // Email domain validation (should use mediarithmics.com)
-    if (profile.email && !profile.email.includes('@mediarithmics.com')) {
+    if (profile.email && !ValidationUtils.isValidEmail(profile.email, 'mediarithmics.com')) {
       warnings.push('User email should use mediarithmics.com domain');
     }
 
     // Country validation
-    if (profile.address.country && !this.isValidCountry(profile.address.country)) {
+    if (profile.address.country && !ValidationUtils.isValidCountry(profile.address.country)) {
       warnings.push(`Country '${profile.address.country}' may not be supported`);
     }
 
     // State validation (if country is US)
-    if (profile.address.country === 'United States' && profile.address.state && !this.isValidUSState(profile.address.state)) {
+    if (profile.address.country === 'United States' && profile.address.state && !ValidationUtils.isValidUSState(profile.address.state)) {
       warnings.push(`State '${profile.address.state}' may not be a valid US state`);
     }
 
     // Zip code validation
-    if (profile.address.zipCode && !this.isValidZipCode(profile.address.zipCode)) {
+    if (profile.address.zipCode && !ValidationUtils.isValidZipCode(profile.address.zipCode)) {
       warnings.push(`Zip code '${profile.address.zipCode}' format may be invalid`);
     }
 
     // Phone validation
-    if (profile.phone && !this.isValidPhone(profile.phone)) {
+    if (profile.phone && !ValidationUtils.isValidPhone(profile.phone)) {
       warnings.push(`Phone number '${profile.phone}' format may be invalid`);
     }
 
     // Registration date validation (using createdAt)
-    if (profile.createdAt && profile.createdAt > new Date()) {
+    if (profile.createdAt && !ValidationUtils.isValidPastDate(profile.createdAt)) {
       errors.push('User creation date cannot be in the future');
     }
 
@@ -140,7 +141,7 @@ export class DataValidationService {
     // Country validation
     if (!event.country) {
       errors.push('Event must have a country');
-    } else if (!this.isValidCountry(event.country)) {
+    } else if (!ValidationUtils.isValidCountry(event.country)) {
       warnings.push(`Country '${event.country}' may not be supported`);
     }
 
@@ -322,75 +323,7 @@ export class DataValidationService {
     };
   }
 
-  /**
-   * Validates email format
-   * 
-   * @param email - Email address to validate
-   * @returns boolean - True if email is valid
-   */
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
 
-  /**
-   * Validates country name
-   * 
-   * @param country - Country name to validate
-   * @returns boolean - True if country is valid
-   */
-  private isValidCountry(country: string): boolean {
-    const validCountries = [
-      'United States', 'Canada', 'United Kingdom', 'France', 'Germany',
-      'Spain', 'Italy', 'Netherlands', 'Belgium', 'Switzerland',
-      'Austria', 'Sweden', 'Norway', 'Denmark', 'Finland'
-    ];
-    return validCountries.includes(country);
-  }
-
-  /**
-   * Validates US state name
-   * 
-   * @param state - State name to validate
-   * @returns boolean - True if state is valid
-   */
-  private isValidUSState(state: string): boolean {
-    const validStates = [
-      'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
-      'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
-      'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-      'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
-      'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri',
-      'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
-      'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
-      'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
-      'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
-      'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
-    ];
-    return validStates.includes(state);
-  }
-
-  /**
-   * Validates zip code format
-   * 
-   * @param zipCode - Zip code to validate
-   * @returns boolean - True if zip code format is valid
-   */
-  private isValidZipCode(zipCode: string): boolean {
-    const zipRegex = /^\d{5}(-\d{4})?$/;
-    return zipRegex.test(zipCode);
-  }
-
-  /**
-   * Validates phone number format
-   * 
-   * @param phone - Phone number to validate
-   * @returns boolean - True if phone format is valid
-   */
-  private isValidPhone(phone: string): boolean {
-    const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
-    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
-  }
 
 
 

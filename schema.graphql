@@ -1,0 +1,255 @@
+######################################################################################### Define Primary Objects In UserPoint ##########################
+
+
+type UserPoint  @TreeIndexRoot(index:"USER_INDEX") {
+   id:ID!
+   creation_date:Date! @Function(name:"ISODate", params:["creation_ts"])
+   creation_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+
+   accounts:[UserAccount!]!
+   agents:[UserAgent!]!
+   choices:[UserChoice!]!
+   clustering_cohort:ClusteringCohort
+   emails:[UserEmail!]!
+   events:[UserEvent!]!
+   profiles:[UserProfile!]!
+   scenarios:[UserScenario!]!
+   segments:[UserSegment!]!
+   sessions:[UserActivity!]!
+}
+
+########################################################################################## Define UserAccount Object #########################
+
+
+type UserAccount  {
+   id:ID! @TreeIndexRoot(index:"USER_INDEX")
+   compartment_id:String! @ReferenceTable(type:"CORR_OBJECT", model_type:"COMPARTMENTS") @TreeIndex(index:"USER_INDEX")
+   creation_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   user_account_id:String! @TreeIndex(index:"USER_INDEX")
+}
+
+########################################################################################## Define UserAgent Object #########################
+
+
+type UserAgent  @Mirror(object_type:"UserDevicePoint") {
+   id:ID! @TreeIndex(index:"USER_INDEX")
+   creation_date:Date! @Function(name:"ISODate", params:["creation_ts"])
+   creation_ts:Timestamp!
+
+   technical_identifiers:[UserDeviceTechnicalId!]!
+   user_agent_info:UserAgentInfo @Function(name:"DeviceInfo", params:["id"]) @TreeIndex(index:"USER_INDEX")
+}
+
+##############################
+
+
+type UserDeviceTechnicalId  {
+   id:ID! @TreeIndex(index:"USER_INDEX")
+   creation_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   expiration_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   last_seen_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   registry_id:String! @TreeIndex(index:"USER_INDEX")
+   type:String! @TreeIndex(index:"USER_INDEX")
+}
+
+########################################################################################### Define UserChoice Object ###############################
+
+
+type UserChoice  {
+   id:ID!
+   channel_id:String
+   choice_acceptance_value:Boolean! @TreeIndex(index:"USER_INDEX")
+   choice_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   compartment_id:String
+   creation_ts:Timestamp!
+   email_hash:String
+   processing_id:String! @TreeIndex(index:"USER_INDEX")
+   user_account_id:String
+   user_agent_id:String @TreeIndex(index:"USER_INDEX")
+}
+
+###############################
+
+
+type ClusteringCohort  {
+   id:ID! @TreeIndex(index:"USER_INDEX")
+   cohort_id:String! @TreeIndex(index:"USER_INDEX")
+   expiration_ts:Timestamp @TreeIndex(index:"USER_INDEX")
+   last_modified_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+}
+
+#####################################################
+########################################################################## Define UserEmail Object #####################
+
+
+type UserEmail  {
+   id:ID! @TreeIndex(index:"USER_INDEX")
+   creation_ts:Timestamp!
+   email:String @TreeIndex(index:"USER_INDEX")
+}
+
+######################################################################################### Define UserEvent Object ###################
+
+
+type UserEvent  @Mirror(object_type:"UserEvent") {
+   id:ID!
+   completion:Int @TreeIndex(index:"USER_INDEX") @Property(path:"$properties.completion")
+   contextual_key:String @TreeIndex(index:"USER_INDEX")
+   date:Date! @TreeIndex(index:"USER_INDEX") @Function(name:"ISODate", params:["ts"])
+   duration:Int @Property(path:"$properties.duration") @TreeIndex(index:"USER_INDEX")
+   nature:String! @Property(path:"$event_name") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+   referrer:String @TreeIndex(index:"USER_INDEX") @Property(path:"$properties.$referrer")
+   ts:Timestamp!
+   url:String @TreeIndex(index:"USER_INDEX") @Property(path:"$properties.$url")
+
+   articles:[Article] @Property(path:"$properties.$items")
+   device_info:UserAgentInfo
+   mediaItem:[MediaItem] @Property(path:"$properties.$items")
+   products:[Product] @Property(path:"$properties.$items")
+}
+
+########################################################################################## Define Article Object ##################
+
+
+type Article  {
+   id:String @Property(path:"$id")
+   category1:String @TreeIndex(index:"USER_INDEX") @Property(path:"$category1") @EdgeAvailability
+   category2:String @Property(path:"$category2") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+   content:String @TreeIndex(index:"USER_INDEX") @Property(path:"content")
+   shortContent:String @Property(path:"contentShort")
+   title:String @Property(path:"title") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+}
+
+########################################################################################### Define UserAgent Object ##############
+
+
+type UserAgentInfo  {
+   brand:String
+   browser_version:String
+   carrier:String
+   model:String
+   os_version:String
+
+   agent_type:UserAgentType
+   browser_family:BrowserFamily
+   form_factor:FormFactor
+   os_family:OperatingSystemFamily
+}
+
+########################################################################################## Define MediaItem Object ##################
+
+
+type MediaItem  {
+   artists:String @Property(path:"artists") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+   content_type:String @Property(path:"content_type") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+   duration:Int @TreeIndex(index:"USER_INDEX")
+   genres:String @Property(path:"genres") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+   parent_title:String @Property(path:"parent_title") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+   sub_type:String @Property(path:"sub_type") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+   title:String @Property(path:"title") @TreeIndex(index:"USER_INDEX") @EdgeAvailability
+}
+
+########################################################################################## Define Product Object ##################
+
+
+type Product  {
+   id:String @Property(path:"$id")
+   category1:String @TreeIndex(index:"USER_INDEX") @Property(path:"$category1")
+   category2:String @Property(path:"$category2") @TreeIndex(index:"USER_INDEX")
+   name:String @Property(path:"$name") @TreeIndex(index:"USER_INDEX")
+   price:Float @Property(path:"$price")
+   qty:Int @Property(path:"$qty")
+}
+
+########################################################################################## Define UserProfile Object ###################
+
+
+type UserProfile  {
+   id:ID!
+   age:Int @TreeIndex(index:"USER_INDEX")
+   birth_date:Date @Property(path:"$birth_date") @TreeIndex(index:"USER_INDEX")
+   compartment_id:String! @ReferenceTable(type:"CORE_OBJECT", model_type:"COMPARTMENTS") @TreeIndex(index:"USER_INDEX")
+   creation_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   email:String @TreeIndex(index:"USER_INDEX")
+   email_hash:String @TreeIndex(index:"USER_INDEX")
+   favoriteSports:[String] @TreeIndex(index:"USER_INDEX")
+   firstName:String
+   flag_clientType:String @TreeIndex(index:"USER_INDEX")
+   gender:String @Property(path:"gender") @TreeIndex(index:"USER_INDEX")
+   interests:[String] @TreeIndex(index:"USER_INDEX")
+   last_modified_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   lastName:String
+   number_of_children:Int @TreeIndex(index:"USER_INDEX")
+   socioDemo:String @TreeIndex(index:"USER_INDEX")
+   SocioProfCategory:String @TreeIndex(index:"USER_INDEX")
+   user_account_id:String @TreeIndex(index:"USER_INDEX")
+   zipCode:String @TreeIndex(index:"USER_INDEX")
+
+   address:Address
+   score:Scorings
+}
+
+########################################################################################### Define Address Object ################
+
+
+type Address  {
+   city:String @TreeIndex(index:"USER_INDEX")
+   department:Int @TreeIndex(index:"USER_INDEX")
+   streetName:String
+   streetNumber:String
+   zipCode:String @TreeIndex(index:"USER_INDEX")
+}
+
+##################################################### Add "Scorings" object to use internal score as segmentation criteria 
+################### automatic computed fields to manage commercial and marketing pressures 
+
+
+type Scorings  {
+   activation_email:Int @TreeIndex(index:"USER_INDEX")
+   activation_favourites:Int @TreeIndex(index:"USER_INDEX")
+   activation_global:Int @TreeIndex(index:"USER_INDEX")
+   activation_paid:Int @TreeIndex(index:"USER_INDEX")
+   activation_push:Int @TreeIndex(index:"USER_INDEX")
+   email_score:Float @TreeIndex(index:"USER_INDEX")
+   expiration_ts:Timestamp @TreeIndex(index:"USER_INDEX")
+   paid_score:Float @TreeIndex(index:"USER_INDEX")
+   push_score:Float @TreeIndex(index:"USER_INDEX")
+}
+
+############################################################################################ Define UserScenario Object #####################
+
+
+type UserScenario  {
+   id:ID! @TreeIndex(index:"USER_INDEX")
+   active:Boolean @TreeIndex(index:"USER_INDEX")
+   callback_ts:Timestamp @TreeIndex(index:"USER_INDEX")
+   execution_id:String! @TreeIndex(index:"USER_INDEX")
+   expiration_ts:Timestamp @TreeIndex(index:"USER_INDEX")
+   node_id:String! @TreeIndex(index:"USER_INDEX")
+   node_start_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   scenario_id:String! @TreeIndex(index:"USER_INDEX")
+   start_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+}
+
+########################################################################################## Define UserSegment Object ###################
+
+
+type UserSegment  {
+   id:ID! @ReferenceTable(type:"CORE_OBJECT", model_type:"SEGMENTS") @TreeIndex(index:"USER_INDEX")
+   creation_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+   expiration_ts:Timestamp @TreeIndex(index:"USER_INDEX")
+   last_modified_ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+}
+
+############################################################################################ Define UserActivity Object #####################
+
+
+type UserActivity  {
+   id:ID!
+   activity_type:String @TreeIndex(index:"USER_INDEX")
+   session_duration:Int @Property(path:"$session_duration") @TreeIndex(index:"USER_INDEX")
+   site_id:String @TreeIndex(index:"USER_INDEX") @ReferenceTable(type:"CORE_OBJECT", model_type:"CHANNELS") @Property(paths:["$site_id", "$app_id"])
+   ts:Timestamp! @TreeIndex(index:"USER_INDEX")
+}
+
+

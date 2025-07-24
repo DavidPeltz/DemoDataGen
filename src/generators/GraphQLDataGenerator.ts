@@ -131,13 +131,44 @@ export class GraphQLDataGenerator {
     const typeCounts: Record<string, number> = {};
     
     for (const type of objectTypes) {
-      // Skip Query, Mutation, and Subscription types
-      if (!['Query', 'Mutation', 'Subscription'].includes(type.name)) {
+      // Skip Query, Mutation, Subscription, and non-standard types
+      if (!['Query', 'Mutation', 'Subscription'].includes(type.name) && 
+          this.isStandardGraphQLType(type)) {
         typeCounts[type.name] = countPerType;
       }
     }
     
     return this.generateDataForTypes(typeCounts);
+  }
+
+  /**
+   * Determines if a GraphQL type is a standard type that should be processed
+   * 
+   * This method filters out non-standard GraphQL objects that contain
+   * custom directives or complex annotations that aren't suitable for
+   * data generation.
+   * 
+   * @param type - GraphQL type to check
+   * @returns boolean - True if the type should be processed
+   */
+  private isStandardGraphQLType(type: GraphQLType): boolean {
+    // Skip types with complex annotations or custom directives
+    if (!type.fields) {
+      return false;
+    }
+
+    // Check if any fields have complex annotations that indicate non-standard usage
+    for (const field of type.fields) {
+      const fieldType = field.type;
+      if (fieldType && typeof fieldType === 'object' && 'name' in fieldType) {
+        const typeName = fieldType.name;
+        if (typeof typeName === 'string' && typeName.includes('@')) {
+          return false; // Skip types with directive annotations
+        }
+      }
+    }
+
+    return true;
   }
 
   /**
